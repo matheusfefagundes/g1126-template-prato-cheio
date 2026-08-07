@@ -12,8 +12,15 @@
 5. **Conformidade com a Vigilância Sanitária:** Não está definido qual é o nível mínimo aceitável de rastreabilidade exigido pela fiscalização para liberar o piloto sem expor os envolvidos a riscos legais.
 
 ## Stakeholders
-| Stakeholder | Interesse | Influência | O que espera |
-|---|---|---|---|
+
+| Stakeholder | Interesse | Influência | O que espera | O que muda na iteração 1 |
+|---|---|---|---|---|
+| **Doadores (restaurantes, mercados)** | Doar excedentes com rapidez, sem burocracia ou tempo perdido em cadastros longos. | Alta (são a fonte). | Formulários curtos e não comprometer a operação diária no horário de pico. | **Entrevistar primeiro** para validar a incerteza de adesão[cite: 2]. Aceitamos agora o requisito de interface leve e preenchimento manual simples, sem integração com ERPs, para evitar a desistência[cite: 2]. |
+| **ONGs receptoras** | Obter alimentos para distribuir. | Alta (são os consumidores). | Previsibilidade sobre o que vão receber para conseguir planejar a coleta. | **Entrevistar primeiro** para validar o volume de absorção e a capacidade de resposta rápida na janela curta dos perecíveis[cite: 2]. Requisito de "aceitar e reservar" é aceito agora. |
+| **Voluntários entregadores** | Fazer as entregas de forma rápida e assertiva. | Média (essenciais para a logística). | Saber exatamente onde buscar e para onde levar, operando em celulares com conexão instável[cite: 2]. | **Aceitamos requisito técnico agora:** a aplicação deve ser leve para rodar obrigatoriamente no navegador do celular com conexão instável[cite: 2]. Aplicativos nativos pesados ficam para depois[cite: 2]. |
+| **Marta (Coordenadora)** | Crescer a plataforma rápido, gerar volume e comprovar impacto. | Alta (dona do projeto). | Um piloto rodando rápido em poucas semanas com orçamento quase zero[cite: 2]. | **Aceitamos a restrição de prazo e negócio:** foco estrito na "história zero" (publicar, ver, aceitar e sumir) operando em um único bairro[cite: 2]. Expansões e automações ficam para depois[cite: 2]. |
+| **Vigilância Sanitária** | Garantir a segurança alimentar e a saúde pública. | Alta (poder legal). | Rastreabilidade mínima dos alimentos que transitam (tipo, quantidade, validade). | **Entrevistar/Pesquisar primeiro** para definir qual é o nível mínimo exigido para não expor a riscos legais[cite: 2]. Os campos mínimos definidos serão impostos obrigatoriamente. |
+| **Pessoas em vulnerabilidade** *(Não listado)* | Receber refeições prontas, seguras e próprias para consumo. | Baixa (não interagem). | Que a cadeia logística não lhes entregue comida estragada. | Ficam para depois (não serão entrevistados). Porém, a regra de janela de validade não será flexibilizada sob nenhuma hipótese na iteração 1. |
 
 ## Objetivos de impacto
 
