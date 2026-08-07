@@ -5,15 +5,32 @@
 ## Problema central
 
 ## Incertezas
+1. **Volume e Frequência de Doações:** Não há dados sobre quantas doações reais os estabelecimentos farão por dia e se o esforço de cadastramento será mantido.
+2. **Gargalo Logístico Real:** Acredita-se que o problema seja o tempo de coleta, mas não há medições ou dados que comprovem se a demora está na doação, na aceitação ou no transporte.
+3. **Adesão e Comportamento dos Doadores:** Não se sabe se os doadores realmente vão dispor de tempo para cadastrar os itens de forma recorrente ou se desistirão por causa da fricção.
+4. **Capacidade e Demanda das ONGs:** Desconhece-se o volume exato de absorção das cozinhas comunitárias e se elas têm capacidade de resposta rápida na janela curta dos perecíveis.
+5. **Conformidade com a Vigilância Sanitária:** Não está definido qual é o nível mínimo aceitável de rastreabilidade exigido pela fiscalização para liberar o piloto sem expor os envolvidos a riscos legais.
 
 ## Stakeholders
 | Stakeholder | Interesse | Influência | O que espera |
 |---|---|---|---|
 
 ## Objetivos de impacto
-1.
-2.
-3.
+
+1. **Objetivo:** Reduzir a quantidade de comida boa que é descartada.
+   * **Métrica:** Porcentagem de doações cadastradas que expiram a janela de retirada sem serem coletadas.
+   * **Linha de base:** Hoje desconhecida. Medir desde o primeiro dia do piloto.
+   * **Direção:** Reduzir.
+
+2. **Objetivo:** Aumentar o número de refeições que chegam a quem precisa.
+   * **Métrica:** Quantidade (em Kg) de alimentos coletados e entregues com sucesso às ONGs por semana.
+   * **Linha de base:** 0 Kg através do sistema (visto que o piloto ainda não existe).
+   * **Direção:** Aumentar.
+
+3. **Objetivo:** Reduzir o tempo logístico de resposta ("comida disponível" até "comida coletada").
+   * **Métrica:** Tempo médio (em minutos) entre a publicação da doação no sistema e a confirmação de aceite pela ONG.
+   * **Linha de base:** Hoje desconhecida e sentida como o maior gargalo. Medir desde o primeiro dia do piloto.
+   * **Direção:** Reduzir.
 
 ## Regras de negócio
 **Regra da Vantagem Logística**
@@ -24,7 +41,7 @@
 2. **Regra de Expiração do Alimento**
    * **Origem:** Ausente. Decidida pela equipe.
    * **Enunciado:** Se [o prazo máximo da 'janela de retirada' for atingido sem que nenhuma ONG tenha aceitado], então [o sistema altera o status da doação para 'Expirada' e remove o item da lista pública].
-   * **Como se verifica:** Cadastrar uma doação para expirar às 14:00. Alterar a hora do ambiente de testes para 14:01. O item obrigatoriamente deve desaparecer da lista de alimentos disponíveis.
+   * **Como se verifica:** Cadastrar uma doação para expirar às 14:00. Alterar a hora do ambiente de testes para 14:01. O item obrigatoriamente deve desaparecer da lista de alimentos disponíveis.logístico
 
 3. **Regra de Unicidade de Aceite**
    * **Origem:** Inventada.
