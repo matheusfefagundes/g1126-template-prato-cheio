@@ -66,11 +66,34 @@
 * **Saída usada:** Decidir.
 
 ## Histórias de usuário
-| # | História (Como… quero… para…) | INVEST: o que falha |
-|---|---|---|
+| # | História (Como… quero… para…) | INVEST: o que falha | Ação corretiva |
+|---|---|---|---|
+| 1 | Como Doador, quero editar os dados de uma doação já publicada, para evitar punições legais caso eu tenha errado a validade. | Falha em Pequena | Quebrar em duas fatias: editar campos de texto e cancelar a doação inteira. |
+| 2 | Como Voluntário entregador, quero visualizar a rota no mapa do sistema, para não perder a janela de validade da comida no trânsito. | Falha em Estimável | Spike de 4 horas para investigar a viabilidade técnica e os custos da API do Google Maps. |
+| 3 | Como ONG receptora, quero avaliar o estado do alimento após o recebimento, para evitar problemas de saúde nas pessoas em vulnerabilidade. | Falha em Independente | Acopla com o sistema de histórico e gamificação, adiar para a iteração 2. |
+| 4 | Como Vigilância Sanitária, quero um painel com filtros e gráficos de rastreabilidade, para auditar a conformidade de todos os envolvidos. | Falha em Negociável | Escopo muito fechado. Agendar reunião para definir quais são os 2 filtros essenciais para o piloto. |
+| 5 | Como Doador, quero que o sistema se integre ao meu ERP, para que eu não perca tempo na hora de pico e desista de usar. | Falha em Estimável | Spike de 2 dias para ler a documentação dos 3 ERPs mais usados pelos restaurantes parceiros. |
+| ★ 6 | Como Doador, quero publicar um alimento (tipo, quantidade, validade), para reduzir o descarte de comida boa. | Nenhuma (Aceita) | A história zero é independente, pequena e valida o primeiro passo do MVP. |
+| 7 | Como ONG receptora, quero visualizar uma lista de doações disponíveis, para saber quais alimentos estão próximos para coleta. | Nenhuma (Aceita) | Independente e testável por si só, garantindo a visibilidade da doação. |
+| 8 | Como ONG receptora, quero aceitar uma doação exclusiva, para garantir que serei a única a buscá-la e não perder a viagem. | Nenhuma (Aceita) | Encerra a regra de negócio central fechando o ciclo logístico. |
+
+**Por que ela:** A história #6 é a história zero (que, unida à #7 e #8, forma a fronteira do piloto e dos testes do `doacoes.test.js`) porque a publicação embasa a regra de negócio central de Rastreabilidade (campos mínimos) e é o gatilho sem o qual o resto do ecossistema não existe.
+
+**O que ficou FORA da fatia:**
+- Login, senhas e perfis de usuário.
+- Mapa geográfico de rotas.
+- Edição de doações publicadas.
+- Aplicativo móvel nativo e notificações push.
+
+**Por quê:**
+- **Login/Senhas:** Risco de atrasar o piloto por complexidade desnecessária; usaremos links fixos para testar no MVP.
+- **Mapa de rotas:** Difícil de estimar (requer spike técnico); o foco inicial é medir o aceite da ONG, os voluntários podem usar WhatsApp/Waze.
+- **Edição de doações:** Baixa probabilidade de uso no primeiro dia comparado à ação mais simples de excluir e criar de novo.
+- **App nativo/Notificações:** Risco técnico de aprovação nas lojas; a restrição do caso (conexão instável) pede algo leve no navegador.
 
 ## Critérios de aceite
-**História X** — Dado … Quando … Então …
+**História 6** — Dado que o doador preencheu tipo, quantidade e validade Quando enviar o formulário Então o item entra na lista pública e aguarda o aceite da ONG.
+
 
 ## Riscos
 | Risco | Probabilidade | Impacto | Mitigação |
@@ -85,4 +108,19 @@
 - **Riscos e limitações:**
 
 ## Uso de IA
-O que geramos com IA, o que verificamos e o que alteramos.
+Utilizamos a IA para gerar propostas iniciais de histórias e refinamento do fatiamento.
+
+- **História #1:**
+  - **O que a IA gerou:** "Como Doador, quero editar os dados da minha doação, para atualizar informações."
+  - **O que mudamos e por quê:** Refinamos o "para" para terminar em uma perda concreta ("evitar punições legais caso eu tenha errado a validade"). A versão original repetiu a ação com outras palavras e não declarava valor.
+  - **Regra de negócio inventada:** A IA assumiu a regra de que doações podem ser editadas a qualquer momento. Nós (junto com a Marta) decidimos que não se pode editar uma doação que já foi aceita por uma ONG, para evitar conflitos logísticos.
+
+- **História #2:**
+  - **O que a IA gerou:** "Como Voluntário entregador, quero ver o trajeto no aplicativo, para chegar rápido."
+  - **O que mudamos e por quê:** Mudamos o motivo para focar no objetivo do caso ("não perder a janela de validade da comida"). Removemos a palavra "aplicativo", pois a restrição imposta é que tudo rode no navegador leve de celular.
+  - **Regra de negócio inventada:** A IA assumiu que a plataforma possui rastreamento georreferenciado nativo das entregas. Decidimos deixar essa invenção fora do MVP, pois exigiria recursos pesados.
+
+- **História #5:**
+  - **O que a IA gerou:** "Como Doador, quero integrar com o iFood, para automatizar as doações."
+  - **O que mudamos e por quê:** Trocamos "iFood" por "ERP" e mudamos o "para" baseando-se na fala direta do doador no mapa de stakeholders ("não perca tempo na hora de pico e desista de usar").
+  - **Regra de negócio inventada:** A IA inventou a regra de integração com serviços de terceiros (iFood) sem validar viabilidade técnica. A Coordenadora Marta é a dona dessa decisão e decidirá se o custo compensa.
