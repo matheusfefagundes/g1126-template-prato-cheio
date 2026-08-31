@@ -24,7 +24,13 @@ export async function buscarPorId(id) {
   throw new Error('não implementado: repositorio.buscarPorId');
 }
 
-// TODO: marcar a doação como aceita pela ONG e devolver a linha atualizada.
+// A condição `AND status = 'disponivel'` no WHERE é o que garante, de forma
+// que duas ONGs não aceitem a mesma doação: se a segunda UPDATE
+// rodar depois da primeira já ter mudado o status, nenhuma linha é afetada.
 export async function aceitar(id, ong) {
-  throw new Error('não implementado: repositorio.aceitar');
+  const { rows } = await query(
+    "UPDATE doacoes SET status = 'aceita', ong = ? WHERE id = ? AND status = 'disponivel' RETURNING *",
+    [ong, id]
+  );
+  return rows[0];
 }

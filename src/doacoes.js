@@ -19,5 +19,7 @@ export async function listarDisponiveis() {
 // História 8 — "uma ONG aceita uma doação".
 // Regra do caso: uma doação aceita não fica disponível para outra ONG.
 export async function aceitar(id, ong) {
-  throw new Error('não implementado: aceitar');
+  const doacao = await repo.aceitar(id, ong);
+  if (!doacao) throw new Error('Doação já reservada');
+  return doacao;
 }

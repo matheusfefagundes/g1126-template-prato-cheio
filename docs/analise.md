@@ -97,6 +97,10 @@
 - Dado que o doador ainda não publicou nenhuma doação, Quando ele envia tipo, quantidade e validade preenchidos, Então a doação aparece na lista de disponíveis com status "disponível".
 - Dado que o doador ainda não publicou nenhuma doação, Quando ele envia o formulário sem um dos campos obrigatórios (tipo, quantidade ou validade), Então o sistema recusa a publicação e nenhuma doação é criada.
 
+**História 8 — ONG aceita uma doação exclusiva**
+- Dado que existe uma doação publicada e ainda não aceita, Quando uma ONG aciona "aceitar", Então a doação passa para o status "aceita" e fica associada àquela ONG.
+- Dado que existe uma doação já aceita por uma ONG, Quando uma segunda ONG tenta aceitar a mesma doação, Então o sistema recusa o aceite (erro "Doação já reservada") e a doação permanece associada à primeira ONG.
+
 ## Riscos
 Escala usada: alta / média / baixa.
 
@@ -108,10 +112,12 @@ Escala usada: alta / média / baixa.
 ## Hipótese e experimento
 
 ## Decisão de análise
-- **Problema:**
+- **Problema:** definir o que entra e o que fica de fora da fatia da história zero para a iteração 1 andar dentro do prazo e do orçamento quase zero pedido pela Marta.
 - **Alternativas:**
-- **Decisão e justificativa:**
-- **Riscos e limitações:**
+  - (A) Fatia mínima — publicar/listar/aceitar apenas, sem login, sem mapa, sem edição de doação, sem app nativo. Ganha: cabe no prazo e no orçamento, foco total na regra de negócio central (Unicidade de Aceite). Perde: doador não corrige um cadastro errado sem excluir e recriar; voluntário navega sem apoio de mapa dentro do sistema.
+  - (B) Fatia completa — incluir login básico e edição de doações já na iteração 1. Ganha: experiência mais robusta, doador corrige erros sem recriar. Perde: mais tempo de desenvolvimento, risco real de não termos um walking skeleton rodando até a Aula 5.
+- **Decisão e justificativa:** optamos pela alternativa (A). Ela é a que valida a Regra de Unicidade de Aceite e o Objetivo de impacto 3 (reduzir tempo logístico de resposta) dentro do orçamento quase zero exigido pela Marta, e reduz o risco de não termos o walking skeleton pronto no prazo (ver seção Riscos).
+- **Riscos e limitações:** um doador que errar o cadastro (ex.: validade errada) não tem como corrigir — precisa excluir e recriar, o que pode sujar os dados; sem mapa embutido, o voluntário depende de apps externos (WhatsApp/Waze), fora do controle e da métrica do produto.
 
 ## Uso de IA
 Utilizamos a IA para gerar propostas iniciais de histórias e refinamento do fatiamento.
