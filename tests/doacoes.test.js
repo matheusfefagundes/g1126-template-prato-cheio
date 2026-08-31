@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach, afterAll } from 'vitest';
 import request from 'supertest';
 import { criarApp } from '../src/app.js';
 import { migrar, limparBanco, encerrar } from '../src/db.js';
@@ -15,45 +15,31 @@ describe('a aplicação sobe', () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// Backlog de testes do walking skeleton.
-// Cada `it.todo` é um critério de aceite ainda não implementado — o CI não
-// falha por causa deles. À medida que o grupo implementa, troque `it.todo`
-// por um `it` de verdade (veja o exemplo comentado no fim do arquivo).
-//
-// Os testes abaixo usam o banco — que na Unidade 1 é SQLite em memória:
-// nada a instalar, nada a subir.
-// ---------------------------------------------------------------------------
-
-describe('publicar e listar doações', () => {
-  it.todo('mostra a doação publicada na lista de disponíveis');
-  it.todo('recusa doação sem os campos obrigatórios');
-});
-
-describe('aceitar uma doação', () => {
-  it.todo('marca a doação como aceita pela ONG');
-  it.todo('remove a doação da lista de disponíveis depois de aceita');
-  it.todo('recusa aceitar uma doação que já foi aceita por outra ONG');
-});
-
-/* Exemplo de como transformar um critério de aceite em teste.
-   Descomente o beforeEach/afterAll quando começar a usar o banco.
-
+describe('publicar uma doação (história 6)', () => {
   beforeEach(async () => { await migrar(); await limparBanco(); });
   afterAll(async () => { await encerrar(); });
 
-  Dado que um doador publicou uma doação
-  Quando uma ONG consulta as doações disponíveis
-  Então a doação aparece na lista
-
-  it('mostra a doação publicada na lista de disponíveis', async () => {
-    await request(app)
+  // Dado que o doador ainda não publicou nenhuma doação
+  // Quando ele envia o formulário sem um dos campos obrigatórios
+  // Então o sistema recusa a publicação
+  it('recusa doação sem os campos obrigatórios', async () => {
+    const res = await request(app)
       .post('/api/doacoes')
-      .send({ tipo: 'Sopa', quantidade: '10 porções', validade: '2026-08-01' });
+      .send({ tipo: 'Sopa', quantidade: '10 porções' });
 
-    const res = await request(app).get('/api/doacoes');
-    expect(res.status).toBe(200);
-    expect(res.body).toHaveLength(1);
-    expect(res.body[0].tipo).toBe('Sopa');
+    expect(res.status).toBe(400);
   });
-*/
+});
+
+// Backlog: os testes de listar (história 7) e aceitar (história 8) entram
+// nos próximos commits do grupo — cada um troca o `it.todo` da sua história
+// por um `it` de verdade.
+describe('listar doações disponíveis (história 7)', () => {
+  it.todo('mostra a doação publicada na lista de disponíveis');
+  it.todo('remove a doação da lista de disponíveis depois de aceita');
+});
+
+describe('aceitar uma doação (história 8)', () => {
+  it.todo('marca a doação como aceita pela ONG');
+  it.todo('recusa aceitar uma doação que já foi aceita por outra ONG');
+});

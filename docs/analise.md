@@ -92,12 +92,18 @@
 - **App nativo/Notificações:** Risco técnico de aprovação nas lojas; a restrição do caso (conexão instável) pede algo leve no navegador.
 
 ## Critérios de aceite
-**História 6** — Dado que o doador preencheu tipo, quantidade e validade Quando enviar o formulário Então o item entra na lista pública e aguarda o aceite da ONG.
 
+**História 6 — Doador publica um alimento**
+- Dado que o doador ainda não publicou nenhuma doação, Quando ele envia tipo, quantidade e validade preenchidos, Então a doação aparece na lista de disponíveis com status "disponível".
+- Dado que o doador ainda não publicou nenhuma doação, Quando ele envia o formulário sem um dos campos obrigatórios (tipo, quantidade ou validade), Então o sistema recusa a publicação e nenhuma doação é criada.
 
 ## Riscos
+Escala usada: alta / média / baixa.
+
 | Risco | Probabilidade | Impacto | Mitigação |
 |---|---|---|---|
+| Doadores acham os campos obrigatórios (tipo/quantidade/validade) um atrito grande no horário de pico e abandonam o cadastro antes de enviar. | Média | Alta | Até 02/09, o Kauã entrevista 2 doadores parceiros com o formulário atual e mede quantos completam o cadastro sem desistir. |
+| `node:sqlite` é experimental (Node 22+); uma mudança de comportamento entre versões do Node pode quebrar `npm test`/`npm start` na máquina de outro integrante ou no CI. | Baixa | Alta | Até 01/09, o Lucas roda `npm test` e `npm start` em uma segunda máquina com Node 22.13+ e documenta no README a versão exata testada. |
 
 ## Hipótese e experimento
 
