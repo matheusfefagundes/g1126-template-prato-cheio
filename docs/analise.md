@@ -96,6 +96,11 @@
 **História 6 — Doador publica um alimento**
 - Dado que o doador ainda não publicou nenhuma doação, Quando ele envia tipo, quantidade e validade preenchidos, Então a doação aparece na lista de disponíveis com status "disponível".
 - Dado que o doador ainda não publicou nenhuma doação, Quando ele envia o formulário sem um dos campos obrigatórios (tipo, quantidade ou validade), Então o sistema recusa a publicação e nenhuma doação é criada.
+- Dado que o doador ainda não publicou nenhuma doação, Quando ele envia o formulário sem um dos campos obrigatórios (tipo, quantidade ou validade), Então o sistema recusa a publicação e nenhuma doação é criada.
+
+**História 7 — ONG visualiza a lista de doações disponíveis**
+- Dado que existe uma doação publicada e ainda não aceita, Quando a ONG consulta a lista de doações disponíveis, Então a doação aparece na lista.
+- Dado que existe uma doação publicada e já aceita por uma ONG, Quando qualquer ONG consulta a lista de doações disponíveis, Então essa doação não aparece mais na lista.
 
 **História 8 — ONG aceita uma doação exclusiva**
 - Dado que existe uma doação publicada e ainda não aceita, Quando uma ONG aciona "aceitar", Então a doação passa para o status "aceita" e fica associada àquela ONG.
@@ -110,6 +115,11 @@ Escala usada: alta / média / baixa.
 | `node:sqlite` é experimental (Node 22+); uma mudança de comportamento entre versões do Node pode quebrar `npm test`/`npm start` na máquina de outro integrante ou no CI. | Baixa | Alta | Até 01/09, o Lucas roda `npm test` e `npm start` em uma segunda máquina com Node 22.13+ e documenta no README a versão exata testada. |
 
 ## Hipótese e experimento
+Acreditamos que o maior tempo perdido no ciclo doação-coleta está entre a publicação da doação e o aceite por uma ONG (decisão), e não no deslocamento físico até o local (coleta).
+
+Saberemos que estávamos errados se, em pelo menos 10 doações registradas (reais ou simuladas com ONGs parceiras), o tempo médio entre "aceite" e "coleta confirmada" for maior ou igual ao tempo médio entre "publicação" e "aceite", até 02/09.
+
+Como medimos: planilha simples com os timestamps de publicação, aceite e coleta, preenchida manualmente pelo Lucas durante o piloto com 2 ONGs parceiras.
 
 ## Decisão de análise
 - **Problema:** definir o que entra e o que fica de fora da fatia da história zero para a iteração 1 andar dentro do prazo e do orçamento quase zero pedido pela Marta.

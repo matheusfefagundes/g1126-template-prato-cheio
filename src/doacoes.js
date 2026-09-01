@@ -13,7 +13,7 @@ export async function criarDoacao({ tipo, quantidade, validade }) {
 
 // História 7 — "uma ONG vê as doações disponíveis".
 export async function listarDisponiveis() {
-  throw new Error('não implementado: listarDisponiveis');
+  return repo.listarDisponiveis();
 }
 
 // História 8 — "uma ONG aceita uma doação".
