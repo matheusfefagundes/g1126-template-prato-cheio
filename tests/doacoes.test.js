@@ -31,10 +31,39 @@ describe('publicar uma doação (história 6)', () => {
   });
 });
 
-// Backlog: o teste de listar (história 7) entra no próximo commit do grupo.
 describe('listar doações disponíveis (história 7)', () => {
-  it.todo('mostra a doação publicada na lista de disponíveis');
-  it.todo('remove a doação da lista de disponíveis depois de aceita');
+  beforeEach(async () => { await migrar(); await limparBanco(); });
+  afterAll(async () => { await encerrar(); });
+
+  // Dado que existe uma doação publicada e ainda não aceita
+  // Quando a ONG consulta a lista de doações disponíveis
+  // Então a doação aparece na lista
+  it('mostra a doação publicada na lista de disponíveis', async () => {
+    await request(app)
+      .post('/api/doacoes')
+      .send({ tipo: 'Sopa', quantidade: '10 porções', validade: '2026-08-01' });
+
+    const res = await request(app).get('/api/doacoes');
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveLength(1);
+    expect(res.body[0].tipo).toBe('Sopa');
+  });
+
+  // Dado que existe uma doação publicada e já aceita por uma ONG
+  // Quando qualquer ONG consulta a lista de doações disponíveis
+  // Então essa doação não aparece mais na lista
+  it('remove a doação da lista de disponíveis depois de aceita', async () => {
+    const criada = await request(app)
+      .post('/api/doacoes')
+      .send({ tipo: 'Sopa', quantidade: '10 porções', validade: '2026-08-01' });
+
+    await request(app)
+      .post(`/api/doacoes/${criada.body.id}/aceitar`)
+      .send({ ong: 'ONG Esperança' });
+
+    const lista = await request(app).get('/api/doacoes');
+    expect(lista.body).toHaveLength(0);
+  });
 });
 
 describe('aceitar uma doação (história 8)', () => {

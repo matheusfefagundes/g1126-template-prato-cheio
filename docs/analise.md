@@ -96,7 +96,6 @@
 **História 6 — Doador publica um alimento**
 - Dado que o doador ainda não publicou nenhuma doação, Quando ele envia tipo, quantidade e validade preenchidos, Então a doação aparece na lista de disponíveis com status "disponível".
 - Dado que o doador ainda não publicou nenhuma doação, Quando ele envia o formulário sem um dos campos obrigatórios (tipo, quantidade ou validade), Então o sistema recusa a publicação e nenhuma doação é criada.
-- Dado que o doador ainda não publicou nenhuma doação, Quando ele envia o formulário sem um dos campos obrigatórios (tipo, quantidade ou validade), Então o sistema recusa a publicação e nenhuma doação é criada.
 
 **História 7 — ONG visualiza a lista de doações disponíveis**
 - Dado que existe uma doação publicada e ainda não aceita, Quando a ONG consulta a lista de doações disponíveis, Então a doação aparece na lista.

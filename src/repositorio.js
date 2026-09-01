@@ -20,14 +20,10 @@ export async function listarDisponiveis() {
   return rows;
 }
 
+// TODO: buscar uma doação pelo id (devolver undefined se não existir).
 export async function buscarPorId(id) {
   const { rows } = await query('SELECT * FROM doacoes WHERE id = ?', [id]);
   return rows[0];
-}
-
-// TODO: buscar uma doação pelo id (devolver undefined se não existir).
-export async function buscarPorId(id) {
-  throw new Error('não implementado: repositorio.buscarPorId');
 }
 
 // A condição `AND status = 'disponivel'` no WHERE é o que garante, de forma
