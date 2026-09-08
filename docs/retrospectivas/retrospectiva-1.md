@@ -31,7 +31,7 @@
   vence) — ainda não tem código, só a regra descrita em `docs/analise.md`.
 - Rodar os dois experimentos combinados nos Riscos e na Hipótese (entrevista com doadores até
   02/09, checagem do `node:sqlite` em outra máquina até 01/09) antes da Prova 1.
-- Preparar o branch `entrega-1` para a entrega de 03/09.
+- Preparar o branch `entrega-1` para a entrega de 10/09.
 
 ## Autoavaliação de contribuição
 Distribuam 100 pontos entre os integrantes conforme a contribuição desta iteração

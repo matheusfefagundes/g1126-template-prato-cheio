@@ -1,5 +1,4 @@
 // Regras de negócio das doações.
-// TODO (grupo): implementar conforme as histórias e os critérios de aceite da Unidade 1.
 import * as repo from './repositorio.js';
 
 // História 6 — "um doador publica uma doação".

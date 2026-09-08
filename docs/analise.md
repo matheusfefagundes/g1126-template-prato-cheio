@@ -4,6 +4,8 @@
 
 ## Problema central
 
+O problema central do Prato Cheio é que alimentos ainda próprios para consumo são descartados por restaurantes e mercados enquanto ONGs que atendem pessoas em situação de vulnerabilidade não ficam sabendo a tempo do que está disponível para retirada. Hoje essa ponte depende de contato informal (telefone, WhatsApp, redes de conhecidos), lento e pouco confiável dentro da janela curta em que um alimento perecível ainda pode ser aproveitado — e é justamente esse gargalo logístico entre "comida disponível" e "comida coletada" que a equipe ainda não sabe medir com precisão (ver Incertezas). A iteração 1 ataca a fatia mínima desse problema — publicar, listar e aceitar uma doação com exclusividade — para validar, com o menor custo possível, se reduzir esse tempo de resposta diminui o desperdício e aumenta a quantidade de refeições entregues (ver Objetivos de impacto e Decisão de análise).
+
 ## Incertezas
 1. **Volume e Frequência de Doações:** Não há dados sobre quantas doações reais os estabelecimentos farão por dia e se o esforço de cadastramento será mantido.
 2. **Gargalo Logístico Real:** Acredita-se que o problema seja o tempo de coleta, mas não há medições ou dados que comprovem se a demora está na doação, na aceitação ou no transporte.
@@ -48,7 +50,7 @@
 2. **Regra de Expiração do Alimento**
    * **Origem:** Ausente. Decidida pela equipe.
    * **Enunciado:** Se [o prazo máximo da 'janela de retirada' for atingido sem que nenhuma ONG tenha aceitado], então [o sistema altera o status da doação para 'Expirada' e remove o item da lista pública].
-   * **Como se verifica:** Cadastrar uma doação para expirar às 14:00. Alterar a hora do ambiente de testes para 14:01. O item obrigatoriamente deve desaparecer da lista de alimentos disponíveis.logístico
+   * **Como se verifica:** Cadastrar uma doação para expirar às 14:00. Alterar a hora do ambiente de testes para 14:01. O item obrigatoriamente deve desaparecer da lista de alimentos disponíveis.
 
 3. **Regra de Unicidade de Aceite**
    * **Origem:** Inventada.
@@ -111,7 +113,7 @@ Escala usada: alta / média / baixa.
 | Risco | Probabilidade | Impacto | Mitigação |
 |---|---|---|---|
 | Doadores acham os campos obrigatórios (tipo/quantidade/validade) um atrito grande no horário de pico e abandonam o cadastro antes de enviar. | Média | Alta | Até 02/09, o Kauã entrevista 2 doadores parceiros com o formulário atual e mede quantos completam o cadastro sem desistir. |
-| `node:sqlite` é experimental (Node 22+); uma mudança de comportamento entre versões do Node pode quebrar `npm test`/`npm start` na máquina de outro integrante ou no CI. | Baixa | Alta | Até 01/09, o Lucas roda `npm test` e `npm start` em uma segunda máquina com Node 22.13+ e documenta no README a versão exata testada. |
+| `node:sqlite` é experimental (Node 22+); uma mudança de comportamento entre versões do Node pode quebrar `npm test`/`npm start` na máquina de outro integrante ou no CI. | Baixa | Alta | Até 01/09, o Lucas roda `npm test` e `npm start` em uma segunda máquina com Node 22.13+ e documenta no README a versão exata testada. **Experimento realizado em 08/09:** `npm test` rodou 6/6 verde em três execuções consecutivas no Node v24.13.1 (Windows), além do Node 22 já usado no CI — nenhuma incompatibilidade foi reproduzida na prática. |
 
 ## Hipótese e experimento
 Acreditamos que o maior tempo perdido no ciclo doação-coleta está entre a publicação da doação e o aceite por uma ONG (decisão), e não no deslocamento físico até o local (coleta).
