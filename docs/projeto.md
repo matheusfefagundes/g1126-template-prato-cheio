@@ -28,13 +28,29 @@ Decisão 2: doação vencida.
 (contexto + dados ou componentes — em `docs/` ou como imagem)
 
 ## ADRs
-Ver `docs/adr/`.
+- [ADR 0001 — Migração de SQLite para PostgreSQL na Unidade 3](adr/0001-migracao-postgresql.md) — `aceito`, formaliza a Decisão #3 acima.
 
 ## Requisitos não-funcionais
 | Requisito | Como afeta o design |
 |---|---|
+| Quando uma ONG lista as doações disponíveis em qualquer momento da janela de retirada, o sistema responde em até 2 segundos, medido por 10 chamadas manuais a `GET /api/doacoes` cronometradas pelo relógio do celular, sem nenhuma acima de 2s. | Nasce da restrição de orçamento quase zero da Marta (sem CDN ou cache pago) e do caso (voluntário com conexão instável no celular). Afeta a Decisão #3/ADR 0001: ficar em um único PostgreSQL local, sem camada extra de cache, é só sustentável se a consulta simples (`SELECT ... WHERE status='disponivel'`) já for rápida o bastante sozinha — custo: se não for, o grupo paga com uma camada de cache que hoje não está no escopo. |
+| Quando o grupo troca o banco de SQLite para PostgreSQL (ADR 0001), o sistema mantém o comportamento das histórias #6, #7 e #8 inalterado, medido pelos 6 testes de `tests/doacoes.test.js` passando sem nenhuma alteração de asserção, só trocando a conexão em `src/db.js`. | Decorre diretamente do ADR 0001 (Critério de validação). Afeta a Decisão #3: é o que justifica a abstração `query()`/`{rows}` já existir em `src/db.js` hoje — custo: qualquer função de `src/repositorio.js` que algum dia usar SQL específico do SQLite (ex.: `datetime('now')`) precisa de ajuste de dialeto na migração, sob pena de quebrar esse critério. |
+| Quando o `node:sqlite` muda de comportamento entre versões do Node (risco já registrado em `docs/analise.md`), o sistema continua funcionando sem intervenção, medido por `npm test` passando 6/6 tanto em Node 22 (CI) quanto na versão local de cada integrante, antes da migração para PostgreSQL estar pronta. | Nasce do risco "`node:sqlite` é experimental" do `docs/analise.md`. Afeta o ADR 0001 (Contexto): é a justificativa de por que a migração é necessária e não apenas desejável — custo: enquanto a migração não acontece, o grupo paga rodando esse teste de compatibilidade manualmente a cada atualização de Node, como já foi feito em 08/09. |
 
 ## Critérios de validação do projeto
+1. **(Sim/Não)** O ADR 0001 existe em `docs/adr/0001-migracao-postgresql.md` e está linkado na seção `## ADRs` acima. — Fonte: `docs/projeto.md` > ADRs.
+2. **(Sim/Não)** O critério de validação do ADR 0001 cita `DATABASE_URL` alcançável, schema migrado e CI verde, igual ao que o `README.md` já promete para a Unidade 3. — Fonte: `docs/adr/0001-migracao-postgresql.md` > Critério de validação; `README.md` > "O banco: SQLite agora, PostgreSQL depois".
+3. **(Sim/Não)** O bloco de serviço `postgres` em `.github/workflows/ci.yml` já existe comentado, pronto para ser ativado na Unidade 3. — Fonte: `.github/workflows/ci.yml`, linhas 14-36.
+4. **(Sim/Não)** Cada decisão da tabela `## Decisões de projeto` cita um requisito ou risco de origem na Unidade 1. — Fonte: `docs/projeto.md` > Decisões de projeto, coluna "Requisito/risco da Análise".
+5. **(Sim/Não)** Os 6 testes de `tests/doacoes.test.js` continuam passando no CI atual (antes de qualquer mudança de banco). — Fonte: GitHub Actions, check `build-e-testes` no commit mais recente de `main`.
+6. **(Sim/Não)** Cada um dos 3 requisitos não-funcionais acima tem uma medida numérica ou observável, não um adjetivo solto. — Fonte: `docs/projeto.md` > Requisitos não-funcionais, coluna "Requisito".
+7. **(Sim/Não)** A Regra de Expiração do Alimento, citada como pendente na Retrospectiva 1, ainda não tem código — isso está declarado como próximo passo, e não escondido. — Fonte: `docs/retrospectivas/retrospectiva-1.md` > Próximos passos; `README.md` > "O que já está pronto e o que falta".
+
+### Fragilidades apontadas pelo revisor interno
+1. **Observação candidata (Claude):** não existe diagrama de dados ou de componentes em `docs/diagramas/` — a seção `## Diagramas` deste documento está vazia, então ninguém de fora consegue visualizar o schema antes ou depois da migração sem ler o código.
+   - **Resposta do time:** `<!-- grupo preenche: corrigida (link do commit) / aceita como limitação / contestada (motivo) -->`
+2. **Observação candidata (Claude):** o CI hoje só roda contra SQLite em memória — o ADR 0001 promete `npm test` verde contra PostgreSQL, mas essa prova automatizada ainda não existe; o critério de validação do ADR está declarado, não comprovado.
+   - **Resposta do time:** `<!-- grupo preenche: corrigida (link do commit) / aceita como limitação / contestada (motivo) -->`
 
 ## Uso de IA
 Nível "IA para consulta" (Aula 06): a IA comparou alternativas e revisou o raciocínio. A escolha das decisões e as justificativas são do grupo.
