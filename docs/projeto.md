@@ -48,9 +48,9 @@ Decisão 2: doação vencida.
 
 ### Fragilidades apontadas pelo revisor interno
 1. **Observação candidata (Claude):** não existe diagrama de dados ou de componentes em `docs/diagramas/` — a seção `## Diagramas` deste documento está vazia, então ninguém de fora consegue visualizar o schema antes ou depois da migração sem ler o código.
-   - **Resposta do time:** `<!-- grupo preenche: corrigida (link do commit) / aceita como limitação / contestada (motivo) -->`
+   - **Resposta do time:** **aceita como limitação.** Fica registrado como fraqueza conhecida desta iteração, sem correção agora: a seção `## Diagramas` segue vazia e não há `docs/diagramas/`. Como o Trabalho 2 é entregue na Aula 10, o diagrama (contexto + dados) é tarefa da próxima iteração, antes da entrega — e até lá quem de fora quiser ver o schema precisa ler `src/db.js` e `src/repositorio.js`.
 2. **Observação candidata (Claude):** o CI hoje só roda contra SQLite em memória — o ADR 0001 promete `npm test` verde contra PostgreSQL, mas essa prova automatizada ainda não existe; o critério de validação do ADR está declarado, não comprovado.
-   - **Resposta do time:** `<!-- grupo preenche: corrigida (link do commit) / aceita como limitação / contestada (motivo) -->`
+   - **Resposta do time:** **aceita como limitação.** Fica registrado como fraqueza conhecida, sem correção agora: a prova automatizada só pode existir depois da refatoração de `src/db.js`, que é da Unidade 3 — hoje `DATABASE_URL` é ignorado pelo código, então descomentar o serviço `postgres` de `.github/workflows/ci.yml` agora quebraria o pipeline em vez de provar algo. O que já existe como preparação é o bloco comentado (`postgres:16-alpine` + `DATABASE_URL`) nas linhas 14-36 do workflow. Até a migração, o critério de validação do ADR 0001 permanece declarado, não comprovado.
 
 ## Uso de IA
 Nível "IA para consulta" (Aula 06): a IA comparou alternativas e revisou o raciocínio. A escolha das decisões e as justificativas são do grupo.
