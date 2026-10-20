@@ -48,6 +48,9 @@ export async function migrar() {
 
 /** Apaga todos os dados. Usado pelos testes. */
 export async function limparBanco() {
+  if (ARQUIVO !== ':memory:') {
+    throw new Error('limparBanco() recusado: banco em uso não é o de teste (:memory:)');
+  }
   conexao().exec('DELETE FROM doacoes');
 }
 
