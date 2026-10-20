@@ -39,3 +39,13 @@ Atende ao risco "`node:sqlite` é experimental" registrado na tabela de Riscos d
 **O que cai/não se aplica mais:** nada do que já estava decidido cai. O que se acrescenta é um novo custo, antes não previsto: alguém do grupo precisa rodar `pg_dump` mensalmente e entregar o arquivo à Vigilância Sanitária — hoje isso não está automatizado nem atribuído a uma pessoa. Fica registrado aqui como consequência negativa adicional (ver `## Consequências`, que não é editado retroativamente): é trabalho manual recorrente, e falta decidir quem o executa e como.
 
 **Referência a `src/db.js`:** continua válida, sem mudança de código necessária. `pg_dump` opera diretamente sobre o banco Postgres pela linha de comando, fora da aplicação não passa pela abstração `query()`/`{rows}` que `src/db.js` expõe para `src/repositorio.js`. Nenhuma divergência a declarar.
+
+## Revisão — 20/10/2026
+
+**O que mudou no contexto:** o piloto já tem doações reais cadastradas, e a limpeza da suíte de testes apagou todas elas numa máquina onde a configuração apontava para o banco real. A Marta pediu que isso não possa acontecer de novo.
+
+**O que continua valendo e por quê:** a decisão de hospedagem deste ADR (PostgreSQL instalado ou em contêiner local) não muda por causa deste incidente. O incidente não tem relação com qual das três alternativas de hospedagem foi escolhida — ele teria acontecido do mesmo jeito em SQLite (como de fato aconteceu) ou em qualquer das alternativas de PostgreSQL consideradas, porque a causa é a ausência de um guard estrutural em `limparBanco()`, não a escolha de onde o banco roda.
+
+**O que cai/não se aplica mais:** nada cai. O mecanismo de defesa contra esse tipo de incidente é registrado como decisão própria no **ADR 0002 — Isolamento do banco de testes em relação ao banco de produção**, para não misturar duas decisões distintas no mesmo arquivo.
+
+**Referência a `src/db.js`:** passa a divergir depois que a Etapa 4b (ADR 0002) for implementada — `limparBanco()` ganha um guard novo. Ver ADR 0002 para o código e o critério de validação.
