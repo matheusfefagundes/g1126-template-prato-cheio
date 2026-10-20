@@ -25,10 +25,14 @@ Decisão 2: doação vencida.
 | Quem paga a conta | o objetivo de impacto fica sem medida | o time, com mais código e mais testes |
 
 ## Diagramas
-(contexto + dados ou componentes — em `docs/` ou como imagem)
+- [Diagrama de contexto](diagramas/contexto.md) — quem interage com o sistema e o que troca com ele; inclui a Vigilância Sanitária.
+- [Diagrama de dados](diagramas/dados.md) — schema real da tabela `doacoes`.
+
+Três divergências entre o diagrama de dados e `src/db.js` (detalhadas no próprio arquivo): `status` é TEXT livre sem enum; nenhum índice existe no schema; não há coluna de timestamp de aceite (`aceita_em`).
 
 ## ADRs
-- [ADR 0001 — Migração de SQLite para PostgreSQL na Unidade 3](adr/0001-migracao-postgresql.md) — `aceito`, formaliza a Decisão #3 acima.
+- [ADR 0001 — Migração de SQLite para PostgreSQL na Unidade 3](adr/0001-migracao-postgresql.md) — `aceito`, formaliza a Decisão #3 acima. Duas revisões: 08/10/2026 (exigência de `pg_dump` mensal da Vigilância Sanitária, decisão mantida) e 20/10/2026 (incidente de limpeza apagando dados reais do piloto, decisão de hospedagem mantida, mecanismo de defesa movido para o ADR 0002).
+- [ADR 0002 — Isolamento do banco de testes em relação ao banco de produção](adr/0002-isolamento-banco-teste-producao.md) — `aceito`, decide o guard em `limparBanco()` + `tests/setup.js` que impede a limpeza de testes de apagar dados fora do banco de teste.
 
 ## Requisitos não-funcionais
 | Requisito | Como afeta o design |
