@@ -22,3 +22,16 @@ export async function aceitar(id, ong) {
   if (!doacao) throw new Error('Doação já reservada');
   return doacao;
 }
+
+// Lista as doações aceitas, aguardando coleta (para o voluntário marcar como coletada).
+export async function listarAceitas() {
+  return repo.listarAceitas();
+}
+
+// História "voluntário marca a doação como coletada".
+// Regra: só uma doação aceita pode ser coletada; uma já coletada é recusada.
+export async function coletar(id) {
+  const doacao = await repo.coletar(id);
+  if (!doacao) throw new Error('Doação não está aceita ou já foi coletada');
+  return doacao;
+}

@@ -107,3 +107,56 @@ describe('aceitar uma doação (história 8)', () => {
     expect(segundoAceite.body.erro).toBe('Doação já reservada');
   });
 });
+
+describe('marcar uma doação como coletada (história coletada)', () => {
+  beforeEach(async () => { await migrar(); await limparBanco(); });
+  afterAll(async () => { await encerrar(); });
+
+  async function criarAceita() {
+    const criada = await request(app)
+      .post('/api/doacoes')
+      .send({ tipo: 'Sopa', quantidade: '10 porções', validade: '2026-08-01' });
+    await request(app)
+      .post(`/api/doacoes/${criada.body.id}/aceitar`)
+      .send({ ong: 'ONG Esperança' });
+    return criada.body.id;
+  }
+
+  // Dado que existe uma doação aceita
+  // Quando a ONG marca como coletada
+  // Então o status vira "coletada"
+  it('marca a doação aceita como coletada', async () => {
+    const id = await criarAceita();
+
+    const res = await request(app).post(`/api/doacoes/${id}/coletar`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.status).toBe('coletada');
+  });
+
+  // Dado que uma doação já está coletada
+  // Quando alguém tenta marcar de novo
+  // Então o sistema recusa
+  it('recusa marcar como coletada uma doação que já está coletada', async () => {
+    const id = await criarAceita();
+    await request(app).post(`/api/doacoes/${id}/coletar`);
+
+    const segunda = await request(app).post(`/api/doacoes/${id}/coletar`);
+
+    expect(segunda.status).toBe(400);
+    expect(segunda.body.erro).toBe('Doação não está aceita ou já foi coletada');
+  });
+
+  // Dado que existe uma doação ainda disponível (não aceita)
+  // Quando alguém tenta marcar como coletada
+  // Então o sistema recusa, pois ninguém coleta o que não foi aceito
+  it('recusa marcar como coletada uma doação que ainda não foi aceita', async () => {
+    const criada = await request(app)
+      .post('/api/doacoes')
+      .send({ tipo: 'Pão', quantidade: '20 unidades', validade: '2026-08-01' });
+
+    const res = await request(app).post(`/api/doacoes/${criada.body.id}/coletar`);
+
+    expect(res.status).toBe(400);
+  });
+});

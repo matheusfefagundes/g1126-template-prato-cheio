@@ -34,3 +34,19 @@ export async function aceitar(id, ong) {
   );
   return rows[0];
 }
+
+// Devolver apenas as doações com status 'aceita' (aguardando coleta).
+export async function listarAceitas() {
+  const { rows } = await query("SELECT * FROM doacoes WHERE status = 'aceita'");
+  return rows;
+}
+
+// Mesmo padrão do aceitar(): a condição `AND status = 'aceita'` no WHERE garante
+// que só uma doação aceita pode virar coletada, e que ninguém coleta duas vezes.
+export async function coletar(id) {
+  const { rows } = await query(
+    "UPDATE doacoes SET status = 'coletada' WHERE id = ? AND status = 'aceita' RETURNING *",
+    [id]
+  );
+  return rows[0];
+}
