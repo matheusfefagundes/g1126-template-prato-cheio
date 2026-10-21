@@ -56,7 +56,23 @@ Três divergências entre o diagrama de dados e `src/db.js` (detalhadas no próp
 1. **Observação candidata (Claude):** não existe diagrama de dados ou de componentes em `docs/diagramas/` — a seção `## Diagramas` deste documento está vazia, então ninguém de fora consegue visualizar o schema antes ou depois da migração sem ler o código.
    - **Resposta do time:** **corrigida.** Os diagramas de contexto e de dados foram adicionados em `docs/diagramas/` e estão linkados na seção `## Diagramas`, conforme o [commit do PR #3](https://github.com/matheusfefagundes/g1126-template-prato-cheio/commit/48d5293ccf972c184c8187bf7803b27bcf6b14f6).
 2. **Observação candidata (Claude):** o CI hoje só roda contra SQLite em memória — o ADR 0001 promete `npm test` verde contra PostgreSQL, mas essa prova automatizada ainda não existe; o critério de validação do ADR está declarado, não comprovado.
-   - **Resposta do time:** **aceita como limitação.** Fica registrado como fraqueza conhecida, sem correção agora: a prova automatizada só pode existir depois da refatoração de `src/db.js`, que é da Unidade 3 — hoje `DATABASE_URL` é ignorado pelo código, então descomentar o serviço `postgres` de `.github/workflows/ci.yml` agora quebraria o pipeline em vez de provar algo. O que já existe como preparação é o bloco comentado (`postgres:16-alpine` + `DATABASE_URL`) nas linhas 14-36 do workflow. Até a migração, o critério de validação do ADR 0001 permanece declarado, não comprovado.
+   - **Resposta do time:** **aceita como limitação.** Fica registrado como fraqueza conhecida, sem correção agora: a prova automatizada só pode existir depois da refatoração de `src/db.js`, que é da Unidade 3. Hoje `src/db.js` lê apenas `DATABASE_FILE` e nunca `DATABASE_URL`, então descomentar o serviço `postgres` de `.github/workflows/ci.yml` agora não quebraria o pipeline: só deixaria um serviço ocioso, que sobe, fica saudável e não é usado por nenhum teste, ou seja, não provaria nada. O que já existe como preparação é o bloco comentado (`postgres:16-alpine` + `DATABASE_URL`) nas linhas 14-36 do workflow. Até a migração, o critério de validação do ADR 0001 permanece declarado, não comprovado.
+   - **Correção posterior (20/10/2026):** a primeira versão desta resposta afirmava que descomentar o serviço "quebraria o pipeline". Era um erro gerado pela IA e não conferido pelo grupo; ver a seção "Uso de IA" abaixo.
 
 ## Uso de IA
-Nível "IA para consulta" (Aula 06): a IA comparou alternativas e revisou o raciocínio. A escolha das decisões e as justificativas são do grupo.
+Nível "IA para consulta" (Aula 06), mantido nesta iteração: a IA (Claude) foi usada para comparar alternativas, redigir rascunhos e revisar o raciocínio; as escolhas e as justificativas finais são do grupo.
+
+**O que a IA fez nesta iteração**
+- **ADRs 0001 e 0002:** ajudou a estruturar contexto, alternativas e consequências, e a listar prós e contras de cada alternativa.
+- **Diagramas** de contexto e de dados (`docs/diagramas/`): gerou rascunhos a partir do schema de `src/db.js`.
+- **Requisitos não-funcionais e critérios de validação:** sugeriu a redação mensurável (número e forma de medir) e a fonte de cada critério Sim/Não.
+- **Revisor interno:** produziu as "observações candidatas" da seção de fragilidades, que o grupo avaliou uma a uma.
+- **Etapas 6 e 7 (Kauã):** apoiou a implementação da história "coletada", seguindo o padrão de `aceitar()`, e o rascunho desta seção.
+
+**O que o grupo mudou ou decidiu**
+- A escolha entre as alternativas dos ADRs e das decisões de projeto, e as justificativas, são do grupo; a IA só listou opções.
+- O grupo decidiu aceitar a fragilidade #2 (CI só contra SQLite) como limitação conhecida, em vez de ativar o serviço `postgres` sem uso.
+- O grupo executou e conferiu o código: `npm test` e a verificação manual de `GET /api/doacoes/aceitas` e `POST /api/doacoes/:id/coletar`.
+
+**Erro real da IA, identificado e corrigido**
+Na resposta à fragilidade #2 (sobre o CI), o texto gerado pela IA dizia que descomentar o serviço `postgres` em `.github/workflows/ci.yml` "quebraria o pipeline". Isso está errado: `src/db.js` só lê `DATABASE_FILE` e nunca `DATABASE_URL` (conferido com `grep` em `src/`), então nada quebraria; o serviço apenas ficaria ocioso e não provaria nada. O grupo percebeu a inconsistência ao reler o código de `src/db.js` contra a afirmação, e corrigiu o texto da resposta para dizer o que de fato acontece, mantendo a conclusão (aceita como limitação até a Unidade 3).
