@@ -17,9 +17,15 @@ export async function listarDisponiveis() {
 
 // História 8 — "uma ONG aceita uma doação".
 // Regra do caso: uma doação aceita não fica disponível para outra ONG.
+// Regra de Expiração do Alimento (Aula 11): doação com validade vencida não pode ser aceita.
 export async function aceitar(id, ong) {
   const doacao = await repo.aceitar(id, ong);
-  if (!doacao) throw new Error('Doação já reservada');
+  if (!doacao) {
+    const atual = await repo.buscarPorId(id);
+    if (!atual) throw new Error('Doação não encontrada');
+    if (atual.status === 'expirada') throw new Error('Doação expirada, não pode mais ser aceita');
+    throw new Error('Doação já reservada');
+  }
   return doacao;
 }
 
