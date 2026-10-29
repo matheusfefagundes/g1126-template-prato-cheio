@@ -189,4 +189,67 @@ describe('doação vencida não pode mais ser aceita (Regra de Expiração do Al
     expect(res.status).toBe(400);
     expect(res.body.erro).toBe('Doação expirada, não pode mais ser aceita');
   });
+
+  // Dado que existe uma doação disponível e sua validade já passou
+// Quando qualquer pessoa consulta a lista de disponíveis
+// Então ela não aparece
+it('não lista uma doação com validade vencida', async () => {
+  await request(app)
+    .post('/api/doacoes')
+    .send({ tipo: 'Sopa', quantidade: '10 porções', validade: dataPassada(1) });
+
+  const res = await request(app).get('/api/doacoes');
+
+  expect(res.body).toHaveLength(0);
+});
+
+// Dado que existe uma doação com validade igual a hoje
+// Quando a lista de disponíveis é consultada
+// Então ela continua aparecendo (hoje ainda vale, "retirar até")
+it('mantém doação com validade de hoje na lista', async () => {
+  await request(app)
+    .post('/api/doacoes')
+    .send({ tipo: 'Pão', quantidade: '5 unidades', validade: dataFutura(0) });
+
+  const res = await request(app).get('/api/doacoes');
+
+  expect(res.body).toHaveLength(1);
+});
+
+// Dado que uma doação vencida foi marcada como expirada
+// Quando alguém consulta a lista de disponíveis depois
+// Então o status dela no banco é 'expirada' (confirma o efeito, não só o status HTTP)
+it('marca a doação vencida como expirada ao listar', async () => {
+  const criada = await request(app)
+    .post('/api/doacoes')
+    .send({ tipo: 'Sopa', quantidade: '10 porções', validade: dataPassada(2) });
+
+  await request(app).get('/api/doacoes'); // dispara a expiração
+
+  const tentativa = await request(app).post(`/api/doacoes/${criada.body.id}/aceitar`);
+
+  expect(tentativa.body.erro).toBe('Doação expirada, não pode mais ser aceita');
+});
+
+// E se a doação não existir?
+it('recusa aceitar uma doação que não existe', async () => {
+  const res = await request(app).post('/api/doacoes/99999/aceitar');
+
+  expect(res.status).toBe(400);
+  expect(res.body.erro).toBe('Doação não encontrada');
+});
+
+// E se a lista já tiver sido consultada antes (a doação já expirou)?
+it('recusa aceitar doação já expirada numa listagem anterior', async () => {
+  const criada = await request(app)
+    .post('/api/doacoes')
+    .send({ tipo: 'Sopa', quantidade: '10 porções', validade: dataPassada(1) });
+
+  await request(app).get('/api/doacoes'); // primeira listagem, já expira
+
+  const res = await request(app).post(`/api/doacoes/${criada.body.id}/aceitar`); // chamada separada
+
+  expect(res.status).toBe(400);
+  expect(res.body.erro).toBe('Doação expirada, não pode mais ser aceita');
+});
 });
