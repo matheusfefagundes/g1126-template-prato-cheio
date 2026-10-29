@@ -5,6 +5,17 @@ import { migrar, limparBanco, encerrar } from '../src/db.js';
 
 const app = criarApp();
 
+// Datas relativas a hoje, para a Regra de Expiração do Alimento (Aula 11) não
+// quebrar os testes conforme o tempo passa. `date('now')` do SQLite é UTC,
+// então usamos UTC aqui também para comparar com a mesma referência.
+function dataFutura(dias) {
+  const d = new Date();
+  d.setUTCDate(d.getUTCDate() + dias);
+  return d.toISOString().slice(0, 10);
+}
+const dataPassada = (dias) => dataFutura(-dias);
+const VALIDADE_PADRAO = dataFutura(30);
+
 // Este teste já passa e não depende do banco:
 // prova que a aplicação sobe e que o CI está funcionando.
 describe('a aplicação sobe', () => {
@@ -41,7 +52,7 @@ describe('listar doações disponíveis (história 7)', () => {
   it('mostra a doação publicada na lista de disponíveis', async () => {
     await request(app)
       .post('/api/doacoes')
-      .send({ tipo: 'Sopa', quantidade: '10 porções', validade: '2026-08-01' });
+      .send({ tipo: 'Sopa', quantidade: '10 porções', validade: VALIDADE_PADRAO });
 
     const res = await request(app).get('/api/doacoes');
     expect(res.status).toBe(200);
@@ -55,7 +66,7 @@ describe('listar doações disponíveis (história 7)', () => {
   it('remove a doação da lista de disponíveis depois de aceita', async () => {
     const criada = await request(app)
       .post('/api/doacoes')
-      .send({ tipo: 'Sopa', quantidade: '10 porções', validade: '2026-08-01' });
+      .send({ tipo: 'Sopa', quantidade: '10 porções', validade: VALIDADE_PADRAO });
 
     await request(app)
       .post(`/api/doacoes/${criada.body.id}/aceitar`)
@@ -76,7 +87,7 @@ describe('aceitar uma doação (história 8)', () => {
   it('marca a doação como aceita pela ONG', async () => {
     const criada = await request(app)
       .post('/api/doacoes')
-      .send({ tipo: 'Sopa', quantidade: '10 porções', validade: '2026-08-01' });
+      .send({ tipo: 'Sopa', quantidade: '10 porções', validade: VALIDADE_PADRAO });
 
     const res = await request(app)
       .post(`/api/doacoes/${criada.body.id}/aceitar`)
@@ -93,7 +104,7 @@ describe('aceitar uma doação (história 8)', () => {
   it('recusa aceitar uma doação que já foi aceita por outra ONG', async () => {
     const criada = await request(app)
       .post('/api/doacoes')
-      .send({ tipo: 'Sopa', quantidade: '10 porções', validade: '2026-08-01' });
+      .send({ tipo: 'Sopa', quantidade: '10 porções', validade: VALIDADE_PADRAO });
 
     await request(app)
       .post(`/api/doacoes/${criada.body.id}/aceitar`)
@@ -115,7 +126,7 @@ describe('marcar uma doação como coletada (história coletada)', () => {
   async function criarAceita() {
     const criada = await request(app)
       .post('/api/doacoes')
-      .send({ tipo: 'Sopa', quantidade: '10 porções', validade: '2026-08-01' });
+      .send({ tipo: 'Sopa', quantidade: '10 porções', validade: VALIDADE_PADRAO });
     await request(app)
       .post(`/api/doacoes/${criada.body.id}/aceitar`)
       .send({ ong: 'ONG Esperança' });
@@ -153,10 +164,29 @@ describe('marcar uma doação como coletada (história coletada)', () => {
   it('recusa marcar como coletada uma doação que ainda não foi aceita', async () => {
     const criada = await request(app)
       .post('/api/doacoes')
-      .send({ tipo: 'Pão', quantidade: '20 unidades', validade: '2026-08-01' });
+      .send({ tipo: 'Pão', quantidade: '20 unidades', validade: VALIDADE_PADRAO });
 
     const res = await request(app).post(`/api/doacoes/${criada.body.id}/coletar`);
 
     expect(res.status).toBe(400);
+  });
+});
+
+describe('doação vencida não pode mais ser aceita (Regra de Expiração do Alimento)', () => {
+  beforeEach(async () => { await migrar(); await limparBanco(); });
+  afterAll(async () => { await encerrar(); });
+
+  // Dado que uma doação está disponível e sua validade já passou
+  // Quando alguém tenta aceitá-la
+  // Então o sistema recusa e marca a doação como expirada
+  it('recusa aceitar uma doação com validade vencida', async () => {
+    const criada = await request(app)
+      .post('/api/doacoes')
+      .send({ tipo: 'Sopa', quantidade: '10 porções', validade: dataPassada(1) });
+
+    const res = await request(app).post(`/api/doacoes/${criada.body.id}/aceitar`);
+
+    expect(res.status).toBe(400);
+    expect(res.body.erro).toBe('Doação expirada, não pode mais ser aceita');
   });
 });

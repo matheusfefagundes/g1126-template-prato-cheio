@@ -12,8 +12,15 @@ export async function inserir({ tipo, quantidade, validade }) {
   return rows[0];
 }
 
+// Marca como 'expirada' toda doação disponível cuja validade já passou.
+// Rodada antes de listar/aceitar, para a lista nunca mostrar nem aceitar o que já venceu.
+export async function expirarVencidas() {
+  await query("UPDATE doacoes SET status = 'expirada' WHERE status = 'disponivel' AND validade < date('now')");
+}
+
 // Devolver apenas as doações com status 'disponivel'.
 export async function listarDisponiveis() {
+  await expirarVencidas();
   const { rows } = await query("SELECT * FROM doacoes WHERE status = 'disponivel'");
   return rows;
 }
@@ -28,6 +35,7 @@ export async function buscarPorId(id) {
 // que duas ONGs não aceitem a mesma doação: se a segunda UPDATE
 // rodar depois da primeira já ter mudado o status, nenhuma linha é afetada.
 export async function aceitar(id, ong) {
+  await expirarVencidas();
   const { rows } = await query(
     "UPDATE doacoes SET status = 'aceita', ong = ? WHERE id = ? AND status = 'disponivel' RETURNING *",
     [ong, id]

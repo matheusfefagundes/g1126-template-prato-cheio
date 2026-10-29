@@ -80,17 +80,26 @@ git push -u origin historia/ong-aceita-doacao
 Abra o Pull Request no GitHub, preencha o template, espere o **CI ficar verde** e
 peça a revisão de **outro integrante**. Só então faça o merge.
 
+## Definição de pronto
+
+Pronto, no nosso grupo, é:
+- [ ] CI verde no PR — onde se confere: aba Checks do PR (`build-e-testes`)
+- [ ] Aprovado por um integrante que não é o autor — onde se confere: aba Reviews do PR
+- [ ] O critério de aceite da fatia tem pelo menos um teste real, não `it.todo` — onde se confere: diff do PR em `tests/`
+- [ ] A regra de negócio vive em `src/doacoes.js`, o SQL em `src/repositorio.js`, e só `src/db.js` fala com o banco — onde se confere: diff do PR
+- [ ] `npm test` roda sem nenhum teste pulado (`.skip`) nem vermelho — onde se confere: terminal do revisor, antes de aprovar
+
 ## O que já está pronto e o que falta
 
 Pronto (Trabalho 1 — walking skeleton): história zero ponta a ponta —
 um doador publica uma doação (`src/doacoes.js` + `src/repositorio.js`) → uma ONG vê a
 doação na lista (`GET /api/doacoes`) → a ONG a aceita com exclusividade e ela sai da
-lista (`POST /api/doacoes/:id/aceitar`). Os 6 testes em `tests/doacoes.test.js` (Vitest +
-Supertest) cobrem os critérios de aceite das histórias #6, #7 e #8 e estão todos verdes
-no CI (Node 22).
+lista (`POST /api/doacoes/:id/aceitar`). Os 9 testes em `tests/doacoes.test.js` (Vitest +
+Supertest) cobrem os critérios de aceite das histórias #6, #7, #8 e da história "coletada"
+(Trabalho 2), e estão todos verdes no CI (Node 22).
 
-Falta para a próxima iteração (fora do escopo do Trabalho 1, ver "Próximos passos" em
-`docs/retrospectivas/retrospectiva-1.md`): a Regra de Expiração do Alimento.
+Falta para a próxima iteração: a Regra de Expiração do Alimento (Aula 11, veja
+`docs/analise.md` e `docs/projeto.md` > Decisão #2).
 
 ## Uso de IA
 
