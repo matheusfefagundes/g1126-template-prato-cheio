@@ -1,12 +1,12 @@
 // Camada de dados do Prato Cheio — acesso ao banco.
 // A conexão e o schema já estão prontos em src/db.js.
-// Marcador de parâmetro é `?` (SQL parametrizado evita injeção):
-//   const { rows } = await query('SELECT * FROM doacoes WHERE id = ?', [id]);
+// Marcador de parâmetro é `$1, $2, ...` (SQL parametrizado evita injeção):
+//   const { rows } = await query('SELECT * FROM doacoes WHERE id = $1', [id]);
 import { query } from './db.js';
 
 export async function inserir({ tipo, quantidade, validade }) {
   const { rows } = await query(
-    'INSERT INTO doacoes (tipo, quantidade, validade) VALUES (?, ?, ?) RETURNING *',
+    'INSERT INTO doacoes (tipo, quantidade, validade) VALUES ($1, $2, $3) RETURNING *',
     [tipo, quantidade, validade]
   );
   return rows[0];
@@ -14,8 +14,14 @@ export async function inserir({ tipo, quantidade, validade }) {
 
 // Marca como 'expirada' toda doação disponível cuja validade já passou.
 // Rodada antes de listar/aceitar, para a lista nunca mostrar nem aceitar o que já venceu.
+// Comparação fixa em UTC (date('now') do SQLite sempre foi UTC, sem conceito de timezone).
 export async function expirarVencidas() {
-  await query("UPDATE doacoes SET status = 'expirada' WHERE status = 'disponivel' AND validade < date('now')");
+  await query(
+    `UPDATE doacoes
+        SET status = 'expirada'
+      WHERE status = 'disponivel'
+        AND validade::date < (now() AT TIME ZONE 'UTC')::date`
+  );
 }
 
 // Devolver apenas as doações com status 'disponivel'.
@@ -27,7 +33,7 @@ export async function listarDisponiveis() {
 
 // Buscar uma doação pelo id (devolver undefined se não existir).
 export async function buscarPorId(id) {
-  const { rows } = await query('SELECT * FROM doacoes WHERE id = ?', [id]);
+  const { rows } = await query('SELECT * FROM doacoes WHERE id = $1', [id]);
   return rows[0];
 }
 
@@ -37,7 +43,7 @@ export async function buscarPorId(id) {
 export async function aceitar(id, ong) {
   await expirarVencidas();
   const { rows } = await query(
-    "UPDATE doacoes SET status = 'aceita', ong = ? WHERE id = ? AND status = 'disponivel' RETURNING *",
+    "UPDATE doacoes SET status = 'aceita', ong = $1 WHERE id = $2 AND status = 'disponivel' RETURNING *",
     [ong, id]
   );
   return rows[0];
@@ -53,7 +59,7 @@ export async function listarAceitas() {
 // que só uma doação aceita pode virar coletada, e que ninguém coleta duas vezes.
 export async function coletar(id) {
   const { rows } = await query(
-    "UPDATE doacoes SET status = 'coletada' WHERE id = ? AND status = 'aceita' RETURNING *",
+    "UPDATE doacoes SET status = 'coletada' WHERE id = $1 AND status = 'aceita' RETURNING *",
     [id]
   );
   return rows[0];
