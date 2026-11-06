@@ -16,14 +16,14 @@
 - **Evidência de que o comportamento se manteve:**
   - testes antes da mudança: 16 passando (SQLite)
   - testes depois da mudança: 16 passando (PostgreSQL real, via Docker)
-  - link da execução do CI verde: *(preencher após o push — pendente)*
+  - link da execução do CI verde: https://github.com/matheusfefagundes/g1126-template-prato-cheio/actions/runs/42304869010/job/128191550837
 
 ## Refatoração 2 — Centralizar o tratamento de erro das rotas
 
 - **Cheiro de código atacado:** duplicação — os 5 handlers de rota em `src/app.js` repetem o mesmo bloco `try { ... } catch (erro) { res.status(400).json({erro: erro.message}) }`, idêntico em todos.
 - **Qual dor concreta isso resolvia:** a próxima rota nova precisa lembrar de copiar esse bloco certo; esquecer uma vez deixa uma rejeição sem tratamento (vira erro cru do Express em vez do contrato `{erro}`); mudar o formato do erro no futuro exigiria editar 5 lugares iguais em vez de 1.
-- **O que mudou:** *(a aplicar no PR separado — Kauã)*
-- **Evidência (testes verdes antes e depois):** *(a preencher no PR separado)*
+- **O que mudou:** "Extraído comTratamentoDeErro() em src/app.js; os 5 handlers passam a centralizar o catch nessa função, mantendo cada um seu próprio código de sucesso (201 no POST de criação, por exemplo)."
+- **Evidência (testes verdes antes e depois):** "16/16 testes passando antes e depois, nenhuma asserção mudou, só a estrutura interna do arquivo."
 
 ---
 
