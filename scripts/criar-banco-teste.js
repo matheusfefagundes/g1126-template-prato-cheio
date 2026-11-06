@@ -17,6 +17,9 @@ if (!/_test$/.test(nomeBanco)) {
 
 // Conecta ao banco de manutenção "postgres" (sempre existe num servidor novo)
 // porque não é possível criar um banco estando conectado a ele mesmo.
+// Exige que o usuário de DATABASE_URL tenha permissão CREATEDB — verdade por
+// padrão no usuário criado pela imagem oficial do Postgres (local/CI, ADR
+// 0001); se um dia o banco for gerenciado por fora, confirme essa permissão.
 const urlManutencao = urlTeste.replace(/\/[^/?]+(\?.*)?$/, '/postgres$1');
 const admin = new pg.Pool({ connectionString: urlManutencao });
 

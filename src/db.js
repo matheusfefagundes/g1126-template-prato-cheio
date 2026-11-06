@@ -9,13 +9,14 @@ const { Pool } = pg;
 
 const DATABASE_URL = process.env.DATABASE_URL;
 
+if (!DATABASE_URL) {
+  throw new Error('DATABASE_URL não definida — configure um PostgreSQL acessível (ver .env.example).');
+}
+
 // Nome do banco, resolvido uma única vez na importação do módulo — igual ao
 // que ARQUIVO fazia para o SQLite (ADR 0002: o guard confere o alvo real já
 // resolvido na importação, não process.env lido de novo depois).
-const NOME_BANCO = (() => {
-  try { return new URL(DATABASE_URL).pathname.replace(/^\//, ''); }
-  catch { return ''; }
-})();
+const NOME_BANCO = new URL(DATABASE_URL).pathname.replace(/^\//, '');
 
 let pool;
 

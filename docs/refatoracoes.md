@@ -27,4 +27,4 @@
 
 ---
 
-**Limitações e o que ficou de fora:** (o que vocês viram e decidiram não refatorar, e por quê)
+**Limitações e o que ficou de fora:** `vitest.config.js` roda os arquivos de teste em série (`fileParallelism: false`), porque agora todos compartilham o mesmo banco Postgres real — ao contrário do `:memory:` do SQLite, isolado por processo, um Postgres compartilhado deixa dois arquivos de teste em paralelo colidirem na mesma tabela. Decidimos corretude antes de velocidade por ora; se a suíte crescer muito, vale revisitar (schema por worker, por exemplo) — apontado na revisão do PR #8 por Kauã.
