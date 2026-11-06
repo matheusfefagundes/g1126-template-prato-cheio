@@ -4,21 +4,27 @@
 
 ## Refatoração 1 — Migração de SQLite para PostgreSQL
 
-- **Motivo:** (o que a decidiu — ver o ADR da Unidade 2)
-- **O que mudou:** (arquivos e o que neles)
-- **O que NÃO mudou:** (as regras de negócio? as rotas? os testes?)
-- **Evidência de que o comportamento se manteve:**
-  - testes antes da mudança: ___ passando
-  - testes depois da mudança: ___ passando
-  - link da execução do CI verde:
-
-## Refatoração 2 — (nome)
-
-- **Cheiro de código atacado:** (duplicação, função longa, nome que engana, regra na rota…)
-- **Qual dor concreta isso resolvia:**
+- **Motivo:** ADR 0001 (`docs/adr/0001-migracao-postgresql.md`) — o SQLite embutido (`node:sqlite`) é uma API experimental do Node, e a disciplina já exige PostgreSQL na Unidade 3. A hospedagem decidida no ADR (instalado/contêiner local) foi executada via Docker.
 - **O que mudou:**
-- **Evidência (testes verdes antes e depois):**
+  - `src/db.js`: driver trocado de `node:sqlite` (`DatabaseSync`) para `pg` (`Pool`). `query()` continua devolvendo `{ rows }`. `migrar()` usa DDL do Postgres (`SERIAL`, `TIMESTAMPTZ`). `limparBanco()` troca o guard `ARQUIVO !== ':memory:'` (SQLite) por `!/_test$/.test(NOME_BANCO)` (Postgres não tem equivalente a `:memory:`; a convenção de nome `..._test` cumpre o mesmo papel, verificada sobre o alvo real de `DATABASE_URL`, não uma flag separada — mesmo raciocínio do ADR 0002).
+  - `src/repositorio.js`: marcadores `?` → `$1, $2, ...` (dialeto do `pg`); `expirarVencidas()` usa `validade::date < (now() AT TIME ZONE 'UTC')::date` em vez de `validade < date('now')`.
+  - `.github/workflows/ci.yml`: bloco `services.postgres` e `DATABASE_URL` descomentados; novo passo "Criar banco de teste" antes de `npm test`.
+  - `scripts/criar-banco-teste.js` (novo): provisiona o banco `..._test`, usado por CI e localmente.
+  - `tests/setup.js` e `tests/db-seguranca.test.js`: guard adaptado para `DATABASE_URL` (a asserção do teste de segurança não mudou, só a variável simulada).
+  - `vitest.config.js`: `DATABASE_URL` do banco de teste + `fileParallelism: false` (um Postgres real compartilhado, ao contrário do `:memory:` isolado por processo, pode colidir entre arquivos de teste rodando em paralelo).
+- **O que NÃO mudou:** `src/doacoes.js` (nenhuma regra de negócio) e `src/app.js` (nenhuma rota) não aparecem no diff — o contrato `query()`→`{rows}` absorveu toda a troca de banco. Os 16 testes existentes continuam com as mesmas asserções (só o teste de segurança teve a variável de ambiente simulada trocada de nome, não o comportamento esperado).
+- **Evidência de que o comportamento se manteve:**
+  - testes antes da mudança: 16 passando (SQLite)
+  - testes depois da mudança: 16 passando (PostgreSQL real, via Docker)
+  - link da execução do CI verde: *(preencher após o push — pendente)*
+
+## Refatoração 2 — Centralizar o tratamento de erro das rotas
+
+- **Cheiro de código atacado:** duplicação — os 5 handlers de rota em `src/app.js` repetem o mesmo bloco `try { ... } catch (erro) { res.status(400).json({erro: erro.message}) }`, idêntico em todos.
+- **Qual dor concreta isso resolvia:** a próxima rota nova precisa lembrar de copiar esse bloco certo; esquecer uma vez deixa uma rejeição sem tratamento (vira erro cru do Express em vez do contrato `{erro}`); mudar o formato do erro no futuro exigiria editar 5 lugares iguais em vez de 1.
+- **O que mudou:** *(a aplicar no PR separado — Kauã)*
+- **Evidência (testes verdes antes e depois):** *(a preencher no PR separado)*
 
 ---
 
-**Limitações e o que ficou de fora:** (o que vocês viram e decidiram não refatorar, e por quê)
+**Limitações e o que ficou de fora:** `vitest.config.js` roda os arquivos de teste em série (`fileParallelism: false`), porque agora todos compartilham o mesmo banco Postgres real — ao contrário do `:memory:` do SQLite, isolado por processo, um Postgres compartilhado deixa dois arquivos de teste em paralelo colidirem na mesma tabela. Decidimos corretude antes de velocidade por ora; se a suíte crescer muito, vale revisitar (schema por worker, por exemplo) — apontado na revisão do PR #8 por Kauã.

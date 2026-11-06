@@ -1,59 +1,65 @@
-// Conexão com o banco. Já vem pronto — não precisa mexer agora.
+// Conexão com o banco. Agora em PostgreSQL via `pg` (Pool).
 //
-// UNIDADE 1: SQLite, embutido no Node (módulo `node:sqlite`) — nada para instalar.
-// UNIDADE 3: este arquivo será refatorado para PostgreSQL. A interface abaixo
-//            (`query` devolvendo `{ rows }`) foi desenhada para que a troca fique
-//            contida aqui, sem espalhar mudança pelo resto do código.
-// `node:sqlite` é módulo embutido do Node 22+. Carregado via createRequire porque
-// algumas ferramentas (como o Vite/Vitest) ainda não o reconhecem como embutido.
-import { createRequire } from 'node:module';
-const { DatabaseSync } = createRequire(import.meta.url)('node:sqlite');
+// UNIDADE 3: refatoração de SQLite para PostgreSQL (ADR 0001). A interface
+// abaixo (`query` devolvendo `{ rows }`) é a mesma que já existia — a troca
+// de driver fica contida neste arquivo, sem espalhar mudança pelo resto do código.
+import pg from 'pg';
 
-const ARQUIVO = process.env.DATABASE_FILE || 'dados.sqlite';
+const { Pool } = pg;
 
-let db;
+const DATABASE_URL = process.env.DATABASE_URL;
+
+if (!DATABASE_URL) {
+  throw new Error('DATABASE_URL não definida — configure um PostgreSQL acessível (ver .env.example).');
+}
+
+// Nome do banco, resolvido uma única vez na importação do módulo — igual ao
+// que ARQUIVO fazia para o SQLite (ADR 0002: o guard confere o alvo real já
+// resolvido na importação, não process.env lido de novo depois).
+const NOME_BANCO = new URL(DATABASE_URL).pathname.replace(/^\//, '');
+
+let pool;
 
 export function conexao() {
-  if (!db) db = new DatabaseSync(ARQUIVO);
-  return db;
+  if (!pool) pool = new Pool({ connectionString: DATABASE_URL });
+  return pool;
 }
 
 /**
  * Executa uma consulta e devolve { rows }.
- * Use `?` como marcador de parâmetro (evita injeção de SQL):
- *   query('SELECT * FROM doacoes WHERE id = ?', [id])
+ * Use `$1, $2, ...` como marcador de parâmetro (evita injeção de SQL):
+ *   query('SELECT * FROM doacoes WHERE id = $1', [id])
  */
 export async function query(sql, valores = []) {
-  const stmt = conexao().prepare(sql);
-  const ehLeitura = /^\s*(select|with)/i.test(sql) || /returning/i.test(sql);
-  if (ehLeitura) return { rows: stmt.all(...valores) };
-  const info = stmt.run(...valores);
-  return { rows: [], alteradas: info.changes };
+  const { rows, rowCount } = await conexao().query(sql, valores);
+  return { rows, alteradas: rowCount };
 }
 
 /** Cria o schema, se ainda não existir. Rodado por `npm run db:migrar` e ao subir o servidor. */
 export async function migrar() {
-  conexao().exec(`
+  await conexao().query(`
     CREATE TABLE IF NOT EXISTS doacoes (
-      id          INTEGER PRIMARY KEY AUTOINCREMENT,
+      id          SERIAL PRIMARY KEY,
       tipo        TEXT NOT NULL,
       quantidade  TEXT NOT NULL,
       validade    TEXT NOT NULL,
       status      TEXT NOT NULL DEFAULT 'disponivel',
       ong         TEXT,
-      criada_em   TEXT NOT NULL DEFAULT (datetime('now'))
+      criada_em   TIMESTAMPTZ NOT NULL DEFAULT now()
     )
   `);
 }
 
 /** Apaga todos os dados. Usado pelos testes. */
 export async function limparBanco() {
-  if (ARQUIVO !== ':memory:') {
-    throw new Error('limparBanco() recusado: banco em uso não é o de teste (:memory:)');
+  if (!/_test$/.test(NOME_BANCO)) {
+    throw new Error(
+      'limparBanco() recusado: banco em uso não é o de teste (nome deve terminar em "_test").'
+    );
   }
-  conexao().exec('DELETE FROM doacoes');
+  await conexao().query('DELETE FROM doacoes');
 }
 
 export async function encerrar() {
-  if (db) { db.close(); db = undefined; }
+  if (pool) { await pool.end(); pool = undefined; }
 }
