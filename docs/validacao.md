@@ -17,11 +17,11 @@ Copie aqui os critérios de aceite do seu `docs/analise.md` e marque um por um. 
 
 ## Critérios que não atendem — por quê
 
-Nenhum. Os 6 critérios de aceite escritos na Unidade 1 (`docs/analise.md` > Critérios de aceite, histórias #6, #7 e #8) têm hoje um teste automatizado real correspondente em `tests/doacoes.test.js`, passando no CI (`build-e-testes`) contra o PostgreSQL real.
+Nenhum. Os 8 critérios de aceite de `docs/analise.md` (histórias #6, #7, #8, "coletada" e Regra de Expiração do Alimento) têm hoje um teste automatizado real correspondente em `tests/doacoes.test.js`, passando no CI (`build-e-testes`) contra o PostgreSQL real.
 
 ## Mudanças de critério ao longo do semestre
 
-Nenhum critério da Unidade 1 se mostrou errado — mas o produto cresceu além deles sem que a Unidade 1 fosse atualizada: a história "voluntário marca a doação como coletada" (Trabalho 2) e a Regra de Expiração do Alimento (Aula 11) foram implementadas e têm testes reais em `tests/doacoes.test.js` (descrições `marcar uma doação como coletada` e `doação vencida não pode mais ser aceita`), mas nunca ganharam um critério formal no formato Dado/Quando/Então dentro de `docs/analise.md` > Critérios de aceite — essa seção ficou presa no escopo original do walking skeleton (histórias #6/#7/#8). Não é um erro do que foi testado, é uma lacuna de rastreabilidade documental: quem lê só `docs/analise.md` hoje não sabe que essas duas regras existem e têm cobertura de teste. Registramos aqui como aprendizado; não corrigimos retroativamente `docs/analise.md` nesta atividade (fora do escopo de hoje) — fica como próximo passo na retrospectiva.
+Nenhum critério da Unidade 1 se mostrou errado — mas o produto cresceu além deles sem que `docs/analise.md` fosse atualizado na hora: a história "voluntário marca a doação como coletada" (Trabalho 2) e a Regra de Expiração do Alimento (Aula 11) já tinham teste desde que foram implementadas, mas só ganharam critério formal em Dado/Quando/Então em `docs/analise.md` nesta atividade (Lucas e Kauã, respectivamente). A lacuna de rastreabilidade documental identificada nesta iteração já foi corrigida — fica como aprendizado para manter a Unidade 1 atualizada junto com cada história nova, não só retroativamente.
 
 ## Uso de IA
 
