@@ -26,6 +26,8 @@
     <input id="quantidade" placeholder="Ex.: 10 porções">
     <label for="validade">Validade / retirar até</label>
     <input id="validade" type="date">
+    <label for="doador">Seu nome (doador)</label>
+    <input id="doador" placeholder="Ex.: Padaria Pão Bom">
     <button id="publicar">Publicar</button>
   </fieldset>
 
@@ -34,6 +36,14 @@
 
   <h2>Aceitas, aguardando coleta</h2>
   <ul id="aceitas"></ul>
+
+  <fieldset>
+    <legend>Minhas doações</legend>
+    <label for="meuNome">Seu nome (doador)</label>
+    <input id="meuNome" placeholder="Ex.: Padaria Pão Bom">
+    <button id="buscarMinhas">Ver minhas doações</button>
+    <ul id="minhas"></ul>
+  </fieldset>
 
   <script>
     async function carregar() {
@@ -74,7 +84,13 @@
         const botao = document.createElement('button');
         botao.textContent = 'Marcar como coletada';
         botao.onclick = async () => {
-          await fetch(`/api/doacoes/${d.id}/coletar`, { method: 'POST' });
+          const voluntario = prompt('Seu nome (voluntário que está coletando):');
+          if (!voluntario) return;
+          await fetch(`/api/doacoes/${d.id}/coletar`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ voluntario })
+          });
           recarregarTudo();
         };
         li.appendChild(botao);
@@ -94,10 +110,26 @@
         body: JSON.stringify({
           tipo: document.getElementById('tipo').value,
           quantidade: document.getElementById('quantidade').value,
-          validade: document.getElementById('validade').value
+          validade: document.getElementById('validade').value,
+          doador: document.getElementById('doador').value
         })
       });
       recarregarTudo();
+    };
+
+    document.getElementById('buscarMinhas').onclick = async () => {
+      const doador = document.getElementById('meuNome').value;
+      const res = await fetch(`/api/doacoes/minhas?doador=${encodeURIComponent(doador)}`);
+      const doacoes = await res.json();
+      const minhas = document.getElementById('minhas');
+      minhas.innerHTML = doacoes.length
+        ? ''
+        : '<li>Nenhuma doação encontrada para esse nome.</li>';
+      for (const d of doacoes) {
+        const li = document.createElement('li');
+        li.textContent = `${d.tipo} — ${d.quantidade} — status: ${d.status}`;
+        minhas.appendChild(li);
+      }
     };
 
     recarregarTudo();

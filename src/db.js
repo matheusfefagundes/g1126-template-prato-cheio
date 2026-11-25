@@ -48,6 +48,16 @@ export async function migrar() {
       criada_em   TIMESTAMPTZ NOT NULL DEFAULT now()
     )
   `);
+  // Colunas do Trabalho 3 (H1-H4) — ADD COLUMN IF NOT EXISTS porque a tabela
+  // já tem linhas (doações antigas ficam com essas colunas NULL, ver
+  // docs/projeto.md > Decisões de projeto).
+  await conexao().query(`
+    ALTER TABLE doacoes ADD COLUMN IF NOT EXISTS doador TEXT;
+    ALTER TABLE doacoes ADD COLUMN IF NOT EXISTS voluntario TEXT;
+    ALTER TABLE doacoes ADD COLUMN IF NOT EXISTS aceita_em TIMESTAMPTZ;
+    ALTER TABLE doacoes ADD COLUMN IF NOT EXISTS coletada_em TIMESTAMPTZ;
+    ALTER TABLE doacoes ADD COLUMN IF NOT EXISTS motivo_devolucao TEXT;
+  `);
 }
 
 /** Apaga todos os dados. Usado pelos testes. */
