@@ -8,11 +8,13 @@
 | 1 | Como garantir que só uma ONG aceita a doação | **A (escolhida)** `UPDATE ... WHERE status='disponivel'` atômico, como hoje em `src/repositorio.js`. B: reserva temporária com prazo, confirmada depois. | Regra de Unicidade de Aceite; risco do perecível vencer antes da coleta. |
 | 2 | O que fazer com a doação vencida | A: filtrar na consulta (`validade >= hoje`). **B (escolhida)** mudar o status para `expirada`. | Regra de Expiração do Alimento; Objetivo de impacto 1 (% de doações que expiram sem coleta). |
 | 3 | Como o PostgreSQL vai subir na Unidade 3 | **A (escolhida)** instalado ou em contêiner local. B: serviço gerenciado gratuito (Neon, Supabase, Render). | Restrição de orçamento quase zero da Marta; dependência externa (disponibilidade e limites de plano de terceiros). |
+| 4 | Estados da doação e transições (Trabalho 3) | **A (escolhida)** quatro estados (`disponivel`, `aceita`, `coletada`) com transições fixas: `disponivel→aceita` (aceitar), `aceita→coletada` (coletar), `aceita→disponivel` (devolver, H3) — qualquer transição fora dessas é recusada com erro e nada muda. B: máquina de estados genérica, configurável — descartada por complexidade desnecessária para 3 transições fixas. | Fecha o ciclo de vida da doação que a Análise (H6-H8) deixou em aberto; é o contrato que H1-H4 do Trabalho 3 dependem. |
 
 **Por que escolhemos:**
 - Decisão 1: Optou-se pelo `UPDATE` condicional atômico, em vez de reserva temporária, pela simplicidade: uma única instrução SQL faz valer a Regra de Unicidade de Aceite, sem estado extra, prazo nem rotina de liberação. Como o alimento é perecível e o Objetivo 3 mede o tempo entre publicação e aceite, mantemos o aceite direto. O custo é que o aceite é definitivo: se a ONG aceita e depois não aparece para buscar, nenhuma outra ONG consegue pegar a doação e o alimento vence parado, concretizando o risco do perecível apontado na Análise. Validamos pelo teste do segundo aceite em `tests/doacoes.test.js`.
 - Decisão 2: Optou-se por mudar o status para `expirada`, em vez de apenas filtrar na consulta, por duas razões: (1) permite contar as "doações expiradas sem coleta", métrica do Objetivo 1, e (2) deixa no banco um registro do que foi descartado, útil para auditoria e para a rastreabilidade que a Vigilância Sanitária exige. O custo é código e testes a mais, pois algo precisa mudar o status no momento certo, e o custo depende do mecanismo que o grupo escolher ao implementar: com uma rotina agendada, existe uma janela entre o vencimento e a próxima execução em que a doação vencida ainda aparece na lista e uma ONG pode fazer uma viagem perdida; com uma verificação a cada listagem, não há essa janela, mas cada consulta passa a fazer uma escrita a mais. Uma doação `expirada` não pode ser aceita, e o `WHERE status='disponivel'` da Decisão 1 já garante isso. Validaremos ao implementar, publicando uma doação com validade de ontem e conferindo que ela não aparece na lista.
 - Decisão 3: Optou-se por instalar o PostgreSQL localmente, em vez de usar um serviço gerenciado, para não depender de disponibilidade e limites de planos gratuitos de terceiros. O custo é o trabalho de configuração: cada integrante precisa instalar e configurar o PostgreSQL na própria máquina, o que abre espaço para o "na minha máquina funciona", e o CI (GitHub Actions) passa a exigir um serviço de banco; o bloco comentado em `.github/workflows/ci.yml` já prevê isso. Validaremos na Unidade 3, com o critério: `DATABASE_URL` alcançável, schema migrado e CI verde.
+- Decisão 4: Optou-se por 3 transições fixas e exclusivas (nunca uma máquina de estados genérica), porque o produto só tem 3 ações de verdade (aceitar, coletar, devolver) e cada uma já é implementada como um `UPDATE ... WHERE status = '<esperado>'` atômico — o mesmo padrão da Decisão 1, agora reaproveitado 3 vezes (motivo real da Refatoração 2 do Trabalho 3). Doações publicadas antes desta decisão (sem `doador`/`voluntario`/datas de aceite e coleta) não são migradas retroativamente: essas colunas ficam `NULL` para elas e simplesmente não aparecem em nenhuma consulta que dependa desses campos (ex.: "minhas doações" de H1). Validamos pelos testes de cada história (H1-H4) e pela inversão de regra registrada no PR de H2.
 
 ## Tabela de trade-offs (uma decisão em detalhe)
 Decisão 2: doação vencida.
@@ -23,6 +25,16 @@ Decisão 2: doação vencida.
 | Medir o Objetivo 1 (expiradas sem coleta) | não registra quantas expiraram | permite contar |
 | Risco da viagem perdida | some da lista na hora | some só depois que a rotina roda (se for rotina agendada) |
 | Quem paga a conta | o objetivo de impacto fica sem medida | o time, com mais código e mais testes |
+
+## Donos e revisores — Trabalho 3 (H1-H4)
+| História/Refatoração | Dono | Revisor |
+|---|---|---|
+| Schema (Iteração 0) | Matheus | Kauã |
+| H1 — doador acompanha doações | Matheus | Kauã |
+| H2 — voluntário confirma coleta | Matheus | Lucas |
+| H3 — ONG devolve doação | Lucas | Matheus |
+| Refatoração 2 — `aplicarTransicao` | Lucas | Kauã |
+| H4 — resultado do mês | Kauã | Lucas |
 
 ## Diagramas
 - [Diagrama de contexto](diagramas/contexto.md) — quem interage com o sistema e o que troca com ele; inclui a Vigilância Sanitária.

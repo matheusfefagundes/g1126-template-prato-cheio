@@ -2,12 +2,19 @@
 import * as repo from './repositorio.js';
 
 // História 6 — "um doador publica uma doação".
-// Critério: tipo, quantidade e validade são obrigatórios.
-export async function criarDoacao({ tipo, quantidade, validade }) {
-  if (!tipo || !quantidade || !validade) {
-    throw new Error('tipo, quantidade e validade são obrigatórios');
+// Critério: tipo, quantidade, validade e doador são obrigatórios (o campo
+// doador foi acrescentado pela história H1 do Trabalho 3 — CA3).
+export async function criarDoacao({ tipo, quantidade, validade, doador }) {
+  if (!tipo || !quantidade || !validade || !doador) {
+    throw new Error('tipo, quantidade, validade e doador são obrigatórios');
   }
-  return repo.inserir({ tipo, quantidade, validade });
+  return repo.inserir({ tipo, quantidade, validade, doador });
+}
+
+// História H1 (Trabalho 3) — "o doador acompanha as suas doações".
+export async function listarPorDoador(doador) {
+  if (!doador) throw new Error('doador é obrigatório');
+  return repo.listarPorDoador(doador);
 }
 
 // História 7 — "uma ONG vê as doações disponíveis".
@@ -34,10 +41,13 @@ export async function listarAceitas() {
   return repo.listarAceitas();
 }
 
-// História "voluntário marca a doação como coletada".
-// Regra: só uma doação aceita pode ser coletada; uma já coletada é recusada.
-export async function coletar(id) {
-  const doacao = await repo.coletar(id);
+// História H2 (Trabalho 3) — "o voluntário confirma a coleta".
+// Regra: só uma doação aceita pode ser coletada; uma já coletada (ou nunca aceita) é recusada.
+// Nome do voluntário é obrigatório (decisão do grupo, docs/projeto.md): é quem
+// se pergunta depois se algo deu errado com a entrega.
+export async function coletar(id, voluntario) {
+  if (!voluntario) throw new Error('voluntario é obrigatório');
+  const doacao = await repo.coletar(id, voluntario);
   if (!doacao) throw new Error('Doação não está aceita ou já foi coletada');
   return doacao;
 }

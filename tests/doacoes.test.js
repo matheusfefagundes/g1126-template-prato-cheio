@@ -52,7 +52,7 @@ describe('listar doações disponíveis (história 7)', () => {
   it('mostra a doação publicada na lista de disponíveis', async () => {
     await request(app)
       .post('/api/doacoes')
-      .send({ tipo: 'Sopa', quantidade: '10 porções', validade: VALIDADE_PADRAO });
+      .send({ tipo: 'Sopa', quantidade: '10 porções', validade: VALIDADE_PADRAO, doador: 'Padaria Pão Bom' });
 
     const res = await request(app).get('/api/doacoes');
     expect(res.status).toBe(200);
@@ -66,7 +66,7 @@ describe('listar doações disponíveis (história 7)', () => {
   it('remove a doação da lista de disponíveis depois de aceita', async () => {
     const criada = await request(app)
       .post('/api/doacoes')
-      .send({ tipo: 'Sopa', quantidade: '10 porções', validade: VALIDADE_PADRAO });
+      .send({ tipo: 'Sopa', quantidade: '10 porções', validade: VALIDADE_PADRAO, doador: 'Padaria Pão Bom' });
 
     await request(app)
       .post(`/api/doacoes/${criada.body.id}/aceitar`)
@@ -87,7 +87,7 @@ describe('aceitar uma doação (história 8)', () => {
   it('marca a doação como aceita pela ONG', async () => {
     const criada = await request(app)
       .post('/api/doacoes')
-      .send({ tipo: 'Sopa', quantidade: '10 porções', validade: VALIDADE_PADRAO });
+      .send({ tipo: 'Sopa', quantidade: '10 porções', validade: VALIDADE_PADRAO, doador: 'Padaria Pão Bom' });
 
     const res = await request(app)
       .post(`/api/doacoes/${criada.body.id}/aceitar`)
@@ -104,7 +104,7 @@ describe('aceitar uma doação (história 8)', () => {
   it('recusa aceitar uma doação que já foi aceita por outra ONG', async () => {
     const criada = await request(app)
       .post('/api/doacoes')
-      .send({ tipo: 'Sopa', quantidade: '10 porções', validade: VALIDADE_PADRAO });
+      .send({ tipo: 'Sopa', quantidade: '10 porções', validade: VALIDADE_PADRAO, doador: 'Padaria Pão Bom' });
 
     await request(app)
       .post(`/api/doacoes/${criada.body.id}/aceitar`)
@@ -126,7 +126,7 @@ describe('marcar uma doação como coletada (história coletada)', () => {
   async function criarAceita() {
     const criada = await request(app)
       .post('/api/doacoes')
-      .send({ tipo: 'Sopa', quantidade: '10 porções', validade: VALIDADE_PADRAO });
+      .send({ tipo: 'Sopa', quantidade: '10 porções', validade: VALIDADE_PADRAO, doador: 'Padaria Pão Bom' });
     await request(app)
       .post(`/api/doacoes/${criada.body.id}/aceitar`)
       .send({ ong: 'ONG Esperança' });
@@ -139,7 +139,9 @@ describe('marcar uma doação como coletada (história coletada)', () => {
   it('marca a doação aceita como coletada', async () => {
     const id = await criarAceita();
 
-    const res = await request(app).post(`/api/doacoes/${id}/coletar`);
+    const res = await request(app)
+      .post(`/api/doacoes/${id}/coletar`)
+      .send({ voluntario: 'Rui' });
 
     expect(res.status).toBe(200);
     expect(res.body.status).toBe('coletada');
@@ -150,9 +152,11 @@ describe('marcar uma doação como coletada (história coletada)', () => {
   // Então o sistema recusa
   it('recusa marcar como coletada uma doação que já está coletada', async () => {
     const id = await criarAceita();
-    await request(app).post(`/api/doacoes/${id}/coletar`);
+    await request(app).post(`/api/doacoes/${id}/coletar`).send({ voluntario: 'Rui' });
 
-    const segunda = await request(app).post(`/api/doacoes/${id}/coletar`);
+    const segunda = await request(app)
+      .post(`/api/doacoes/${id}/coletar`)
+      .send({ voluntario: 'Rui' });
 
     expect(segunda.status).toBe(400);
     expect(segunda.body.erro).toBe('Doação não está aceita ou já foi coletada');
@@ -164,11 +168,70 @@ describe('marcar uma doação como coletada (história coletada)', () => {
   it('recusa marcar como coletada uma doação que ainda não foi aceita', async () => {
     const criada = await request(app)
       .post('/api/doacoes')
-      .send({ tipo: 'Pão', quantidade: '20 unidades', validade: VALIDADE_PADRAO });
+      .send({ tipo: 'Pão', quantidade: '20 unidades', validade: VALIDADE_PADRAO, doador: 'Padaria Pão Bom' });
 
-    const res = await request(app).post(`/api/doacoes/${criada.body.id}/coletar`);
+    const res = await request(app)
+      .post(`/api/doacoes/${criada.body.id}/coletar`)
+      .send({ voluntario: 'Rui' });
 
     expect(res.status).toBe(400);
+  });
+});
+
+describe('voluntário confirma a coleta, com nome e horário (H2, Trabalho 3)', () => {
+  beforeEach(async () => { await migrar(); await limparBanco(); });
+  afterAll(async () => { await encerrar(); });
+
+  async function criarAceita() {
+    const criada = await request(app)
+      .post('/api/doacoes')
+      .send({ tipo: 'Sopa', quantidade: '10 porções', validade: VALIDADE_PADRAO, doador: 'Padaria Pão Bom' });
+    await request(app)
+      .post(`/api/doacoes/${criada.body.id}/aceitar`)
+      .send({ ong: 'ONG Esperança' });
+    return criada.body.id;
+  }
+
+  // CA1 — Dado que a "Casa Esperança" aceitou uma doação, quando o voluntário
+  // "Rui" confirma a coleta, então ela passa a coletada, com o nome do
+  // voluntário e o horário da coleta.
+  it('grava o voluntário e o horário da coleta', async () => {
+    const id = await criarAceita();
+
+    const res = await request(app)
+      .post(`/api/doacoes/${id}/coletar`)
+      .send({ voluntario: 'Rui' });
+
+    expect(res.status).toBe(200);
+    expect(res.body.voluntario).toBe('Rui');
+    expect(res.body.coletada_em).toBeTruthy();
+  });
+
+  // CA2 — Dado que a doação ainda está disponível, quando alguém tenta
+  // confirmar a coleta, então a confirmação é recusada e a doação não muda.
+  it('recusa confirmar coleta de doação ainda disponível', async () => {
+    const criada = await request(app)
+      .post('/api/doacoes')
+      .send({ tipo: 'Pão', quantidade: '5 unidades', validade: VALIDADE_PADRAO, doador: 'Padaria Pão Bom' });
+
+    const res = await request(app)
+      .post(`/api/doacoes/${criada.body.id}/coletar`)
+      .send({ voluntario: 'Rui' });
+
+    expect(res.status).toBe(400);
+    const lista = await request(app).get('/api/doacoes');
+    expect(lista.body).toHaveLength(1);
+    expect(lista.body[0].status).toBe('disponivel');
+  });
+
+  // Caso de erro adicional: nome do voluntário é obrigatório.
+  it('recusa confirmar coleta sem o nome do voluntário', async () => {
+    const id = await criarAceita();
+
+    const res = await request(app).post(`/api/doacoes/${id}/coletar`).send({});
+
+    expect(res.status).toBe(400);
+    expect(res.body.erro).toBe('voluntario é obrigatório');
   });
 });
 
@@ -182,7 +245,7 @@ describe('doação vencida não pode mais ser aceita (Regra de Expiração do Al
   it('recusa aceitar uma doação com validade vencida', async () => {
     const criada = await request(app)
       .post('/api/doacoes')
-      .send({ tipo: 'Sopa', quantidade: '10 porções', validade: dataPassada(1) });
+      .send({ tipo: 'Sopa', quantidade: '10 porções', validade: dataPassada(1), doador: 'Padaria Pão Bom' });
 
     const res = await request(app).post(`/api/doacoes/${criada.body.id}/aceitar`);
 
@@ -196,7 +259,7 @@ describe('doação vencida não pode mais ser aceita (Regra de Expiração do Al
 it('não lista uma doação com validade vencida', async () => {
   await request(app)
     .post('/api/doacoes')
-    .send({ tipo: 'Sopa', quantidade: '10 porções', validade: dataPassada(1) });
+    .send({ tipo: 'Sopa', quantidade: '10 porções', validade: dataPassada(1), doador: 'Padaria Pão Bom' });
 
   const res = await request(app).get('/api/doacoes');
 
@@ -209,7 +272,7 @@ it('não lista uma doação com validade vencida', async () => {
 it('mantém doação com validade de hoje na lista', async () => {
   await request(app)
     .post('/api/doacoes')
-    .send({ tipo: 'Pão', quantidade: '5 unidades', validade: dataFutura(0) });
+    .send({ tipo: 'Pão', quantidade: '5 unidades', validade: dataFutura(0), doador: 'Padaria Pão Bom' });
 
   const res = await request(app).get('/api/doacoes');
 
@@ -222,7 +285,7 @@ it('mantém doação com validade de hoje na lista', async () => {
 it('marca a doação vencida como expirada ao listar', async () => {
   const criada = await request(app)
     .post('/api/doacoes')
-    .send({ tipo: 'Sopa', quantidade: '10 porções', validade: dataPassada(2) });
+    .send({ tipo: 'Sopa', quantidade: '10 porções', validade: dataPassada(2), doador: 'Padaria Pão Bom' });
 
   await request(app).get('/api/doacoes'); // dispara a expiração
 
@@ -243,7 +306,7 @@ it('recusa aceitar uma doação que não existe', async () => {
 it('recusa aceitar doação já expirada numa listagem anterior', async () => {
   const criada = await request(app)
     .post('/api/doacoes')
-    .send({ tipo: 'Sopa', quantidade: '10 porções', validade: dataPassada(1) });
+    .send({ tipo: 'Sopa', quantidade: '10 porções', validade: dataPassada(1), doador: 'Padaria Pão Bom' });
 
   await request(app).get('/api/doacoes'); // primeira listagem, já expira
 
@@ -252,4 +315,74 @@ it('recusa aceitar doação já expirada numa listagem anterior', async () => {
   expect(res.status).toBe(400);
   expect(res.body.erro).toBe('Doação expirada, não pode mais ser aceita');
 });
+});
+
+describe('doador acompanha as suas doações (H1, Trabalho 3)', () => {
+  beforeEach(async () => { await migrar(); await limparBanco(); });
+  afterAll(async () => { await encerrar(); });
+
+  // CA1 — Dado que a "Padaria Pão Bom" publicou duas doações e a "Casa
+  // Esperança" aceitou uma delas, quando a padaria consulta as suas doações,
+  // então vê as duas: uma disponível e outra aceita por Casa Esperança.
+  it('mostra as duas doações do doador, com a situação de cada uma', async () => {
+    await request(app)
+      .post('/api/doacoes')
+      .send({ tipo: 'Sopa', quantidade: '10 porções', validade: VALIDADE_PADRAO, doador: 'Padaria Pão Bom' });
+    const segunda = await request(app)
+      .post('/api/doacoes')
+      .send({ tipo: 'Pão', quantidade: '20 unidades', validade: VALIDADE_PADRAO, doador: 'Padaria Pão Bom' });
+    await request(app)
+      .post(`/api/doacoes/${segunda.body.id}/aceitar`)
+      .send({ ong: 'Casa Esperança' });
+
+    const res = await request(app).get('/api/doacoes/minhas').query({ doador: 'Padaria Pão Bom' });
+
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveLength(2);
+    const aceita = res.body.find((d) => d.id === segunda.body.id);
+    expect(aceita.status).toBe('aceita');
+    expect(aceita.ong).toBe('Casa Esperança');
+  });
+
+  // CA2 — Dado que outro doador publicou uma doação, quando a "Padaria Pão
+  // Bom" consulta as suas, então essa doação não aparece.
+  it('não mostra doação de outro doador', async () => {
+    await request(app)
+      .post('/api/doacoes')
+      .send({ tipo: 'Sopa', quantidade: '10 porções', validade: VALIDADE_PADRAO, doador: 'Outro Mercado' });
+
+    const res = await request(app).get('/api/doacoes/minhas').query({ doador: 'Padaria Pão Bom' });
+
+    expect(res.body).toHaveLength(0);
+  });
+
+  // CA3 — Dado que o doador não é informado na publicação, quando a doação é
+  // enviada, então ela é recusada com uma mensagem clara e nada é gravado.
+  it('recusa publicar doação sem informar o doador', async () => {
+    const res = await request(app)
+      .post('/api/doacoes')
+      .send({ tipo: 'Sopa', quantidade: '10 porções', validade: VALIDADE_PADRAO });
+
+    expect(res.status).toBe(400);
+
+    const lista = await request(app).get('/api/doacoes');
+    expect(lista.body).toHaveLength(0);
+  });
+
+  // Integração com H2: a doação coletada também aparece para o doador.
+  it('mostra a doação como coletada depois que o voluntário confirma (integração com H2)', async () => {
+    const criada = await request(app)
+      .post('/api/doacoes')
+      .send({ tipo: 'Sopa', quantidade: '10 porções', validade: VALIDADE_PADRAO, doador: 'Padaria Pão Bom' });
+    await request(app)
+      .post(`/api/doacoes/${criada.body.id}/aceitar`)
+      .send({ ong: 'Casa Esperança' });
+    await request(app)
+      .post(`/api/doacoes/${criada.body.id}/coletar`)
+      .send({ voluntario: 'Rui' });
+
+    const res = await request(app).get('/api/doacoes/minhas').query({ doador: 'Padaria Pão Bom' });
+
+    expect(res.body[0].status).toBe('coletada');
+  });
 });

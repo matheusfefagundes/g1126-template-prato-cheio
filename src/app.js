@@ -40,6 +40,13 @@ export function criarApp() {
   );
 
   app.get(
+    "/api/doacoes/minhas",
+    comTratamentoDeErro(async (req, res) => {
+      res.json(await doacoes.listarPorDoador(req.query.doador));
+    }),
+  );
+
+  app.get(
     "/api/doacoes/aceitas",
     comTratamentoDeErro(async (req, res) => {
       res.json(await doacoes.listarAceitas());
@@ -49,7 +56,7 @@ export function criarApp() {
   app.post(
     "/api/doacoes/:id/coletar",
     comTratamentoDeErro(async (req, res) => {
-      res.json(await doacoes.coletar(req.params.id));
+      res.json(await doacoes.coletar(req.params.id, req.body?.voluntario));
     }),
   );
   return app;
