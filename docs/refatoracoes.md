@@ -36,7 +36,7 @@
   reutilizado pelas 3 funcoes.
 - Evidencia: npm test - mesmo total de testes passando antes e depois, nenhuma
   assercao mudou.
-- Revisao: <link do PR, preencher depois>
+- Revisao: https://github.com/matheusfefagundes/g1126-template-prato-cheio/pull/14
 
 ---
 
