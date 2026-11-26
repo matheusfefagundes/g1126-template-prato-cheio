@@ -2,12 +2,12 @@
 // A conexão e o schema já estão prontos em src/db.js.
 // Marcador de parâmetro é `$1, $2, ...` (SQL parametrizado evita injeção):
 //   const { rows } = await query('SELECT * FROM doacoes WHERE id = $1', [id]);
-import { query } from './db.js';
+import { query } from "./db.js";
 
 export async function inserir({ tipo, quantidade, validade, doador }) {
   const { rows } = await query(
-    'INSERT INTO doacoes (tipo, quantidade, validade, doador) VALUES ($1, $2, $3, $4) RETURNING *',
-    [tipo, quantidade, validade, doador]
+    "INSERT INTO doacoes (tipo, quantidade, validade, doador) VALUES ($1, $2, $3, $4) RETURNING *",
+    [tipo, quantidade, validade, doador],
   );
   return rows[0];
 }
@@ -16,7 +16,9 @@ export async function inserir({ tipo, quantidade, validade, doador }) {
 // Doações antigas (sem doador, docs/projeto.md > Decisão 4) nunca aparecem
 // aqui, porque `doador` nelas é NULL e NULL nunca é igual a nada em SQL.
 export async function listarPorDoador(doador) {
-  const { rows } = await query('SELECT * FROM doacoes WHERE doador = $1', [doador]);
+  const { rows } = await query("SELECT * FROM doacoes WHERE doador = $1", [
+    doador,
+  ]);
   return rows;
 }
 
@@ -28,20 +30,22 @@ export async function expirarVencidas() {
     `UPDATE doacoes
         SET status = 'expirada'
       WHERE status = 'disponivel'
-        AND validade::date < (now() AT TIME ZONE 'UTC')::date`
+        AND validade::date < (now() AT TIME ZONE 'UTC')::date`,
   );
 }
 
 // Devolver apenas as doações com status 'disponivel'.
 export async function listarDisponiveis() {
   await expirarVencidas();
-  const { rows } = await query("SELECT * FROM doacoes WHERE status = 'disponivel'");
+  const { rows } = await query(
+    "SELECT * FROM doacoes WHERE status = 'disponivel'",
+  );
   return rows;
 }
 
 // Buscar uma doação pelo id (devolver undefined se não existir).
 export async function buscarPorId(id) {
-  const { rows } = await query('SELECT * FROM doacoes WHERE id = $1', [id]);
+  const { rows } = await query("SELECT * FROM doacoes WHERE id = $1", [id]);
   return rows[0];
 }
 
@@ -52,7 +56,7 @@ export async function aceitar(id, ong) {
   await expirarVencidas();
   const { rows } = await query(
     "UPDATE doacoes SET status = 'aceita', ong = $1, aceita_em = now() WHERE id = $2 AND status = 'disponivel' RETURNING *",
-    [ong, id]
+    [ong, id],
   );
   return rows[0];
 }
@@ -69,7 +73,7 @@ export async function listarAceitas() {
 export async function coletar(id, voluntario) {
   const { rows } = await query(
     "UPDATE doacoes SET status = 'coletada', voluntario = $1, coletada_em = now() WHERE id = $2 AND status = 'aceita' RETURNING *",
-    [voluntario, id]
+    [voluntario, id],
   );
   return rows[0];
 }
@@ -79,7 +83,35 @@ export async function coletar(id, voluntario) {
 export async function devolver(id, ong, motivo) {
   const { rows } = await query(
     "UPDATE doacoes SET status = 'disponivel', ong = NULL, motivo_devolucao = $1 WHERE id = $2 AND ong = $3 AND status = 'aceita' RETURNING *",
-    [motivo, id, ong]
+    [motivo, id, ong],
   );
   return rows[0];
+}
+
+// Historia H4 (Trabalho 3) - "a Marta ve o resultado do mes".
+// O tempo medio so considera coletas DENTRO do mes consultado (CA3: conta
+// pelo mes da coleta, nao da publicacao - decisao em docs/projeto.md).
+export async function resultadoDoMes(ano, mes) {
+  const { rows } = await query(
+    `SELECT
+ COUNT(*) FILTER (WHERE date_trunc('month', criada_em) = make_date($1, $2, 1)) AS publicadas,
+ COUNT(*) FILTER (WHERE aceita_em IS NOT NULL AND date_trunc('month', aceita_em) = make_date($1, $2, 1)) AS
+aceitas,
+ COUNT(*) FILTER (WHERE coletada_em IS NOT NULL AND date_trunc('month', coletada_em) = make_date($1, $2, 1)) AS
+coletadas,
+ AVG(EXTRACT(EPOCH FROM (coletada_em - aceita_em)) / 3600)
+ FILTER (WHERE coletada_em IS NOT NULL AND date_trunc('month', coletada_em) = make_date($1, $2, 1)) AS
+tempo_medio_horas
+ FROM doacoes`,
+    [ano, mes],
+  );
+  const linha = rows[0];
+  return {
+    publicadas: Number(linha.publicadas),
+    aceitas: Number(linha.aceitas),
+    coletadas: Number(linha.coletadas),
+    // COUNT/AVG do pg voltam como string - conserto do tipo fica aqui, abaixo do contrato.
+    tempoMedioHoras:
+      linha.tempo_medio_horas === null ? null : Number(linha.tempo_medio_horas),
+  };
 }

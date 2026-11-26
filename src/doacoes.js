@@ -67,3 +67,13 @@ export async function devolver(id, ong, motivo) {
     return 'Doacao nao esta aceita';
   });
 }
+
+// Historia H4 (Trabalho 3) - "a Marta ve o resultado do mes".
+export async function resultadoDoMes(ano, mes) {
+ if (!ano || !mes) throw new Error('ano e mes sao obrigatorios');
+ const r = await repo.resultadoDoMes(Number(ano), Number(mes));
+ return {
+ ...r,
+ tempoMedio: r.tempoMedioHoras === null ? 'sem coletas no mes' : `${r.tempoMedioHoras.toFixed(1)} h`
+ };
+}
