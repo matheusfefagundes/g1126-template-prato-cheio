@@ -17,7 +17,7 @@ export function criarApp() {
   app.use(express.static("public"));
 
   app.get("/api/saude", (req, res) => res.json({ ok: true }));
-  
+
   app.get(
     "/api/doacoes",
     comTratamentoDeErro(async (req, res) => {
@@ -60,10 +60,19 @@ export function criarApp() {
     }),
   );
 
+  app.get(
+    "/api/resultado",
+    comTratamentoDeErro(async (req, res) => {
+      res.json(await doacoes.resultadoDoMes(req.query.ano, req.query.mes));
+    }),
+  );
+
   app.post(
     "/api/doacoes/:id/devolver",
     comTratamentoDeErro(async (req, res) => {
-      res.json(await doacoes.devolver(req.params.id, req.body?.ong, req.body?.motivo));
+      res.json(
+        await doacoes.devolver(req.params.id, req.body?.ong, req.body?.motivo),
+      );
     }),
   );
   return app;
