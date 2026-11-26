@@ -51,3 +51,17 @@ export async function coletar(id, voluntario) {
   if (!doacao) throw new Error('Doação não está aceita ou já foi coletada');
   return doacao;
 }
+
+// Historia H3 (Trabalho 3) - "a ONG devolve uma doacao aceita".
+export async function devolver(id, ong, motivo) {
+  if (!motivo) throw new Error('motivo e obrigatorio');
+  const doacao = await repo.devolver(id, ong, motivo);
+  if (!doacao) {
+    const atual = await repo.buscarPorId(id);
+    if (!atual) throw new Error('Doacao nao encontrada');
+    if (atual.status === 'coletada') throw new Error('Doacao ja coletada, nao pode ser devolvida');
+    if (atual.status === 'aceita' && atual.ong !== ong) throw new Error('Voce nao pode devolver uma doacao que nao aceitou');
+    throw new Error('Doacao nao esta aceita');
+  }
+  return doacao;
+}
