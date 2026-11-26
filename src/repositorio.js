@@ -73,3 +73,13 @@ export async function coletar(id, voluntario) {
   );
   return rows[0];
 }
+
+// Historia H3 (Trabalho 3) - "a ONG devolve uma doacao aceita".
+// AND ong = $3 garante que so a ONG que aceitou pode devolver (CA3).
+export async function devolver(id, ong, motivo) {
+  const { rows } = await query(
+    "UPDATE doacoes SET status = 'disponivel', ong = NULL, motivo_devolucao = $1 WHERE id = $2 AND ong = $3 AND status = 'aceita' RETURNING *",
+    [motivo, id, ong]
+  );
+  return rows[0];
+}

@@ -59,5 +59,12 @@ export function criarApp() {
       res.json(await doacoes.coletar(req.params.id, req.body?.voluntario));
     }),
   );
+
+  app.post(
+    "/api/doacoes/:id/devolver",
+    comTratamentoDeErro(async (req, res) => {
+      res.json(await doacoes.devolver(req.params.id, req.body?.ong, req.body?.motivo));
+    }),
+  );
   return app;
 }

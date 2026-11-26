@@ -386,3 +386,76 @@ describe('doador acompanha as suas doações (H1, Trabalho 3)', () => {
     expect(res.body[0].status).toBe('coletada');
   });
 });
+
+describe('ONG devolve uma doacao aceita (H3, Trabalho 3)', () => {
+  beforeEach(async () => { await migrar(); await limparBanco(); });
+  afterAll(async () => { await encerrar(); });
+
+  async function criarAceita(ong = 'Casa Esperanca') {
+    const criada = await request(app)
+      .post('/api/doacoes')
+      .send({ tipo: 'Sopa', quantidade: '10 porcoes', validade: VALIDADE_PADRAO, doador: 'Padaria Pao Bom' });
+    await request(app).post(`/api/doacoes/${criada.body.id}/aceitar`).send({ ong });
+    return criada.body.id;
+  }
+
+  it('devolve a doacao, que volta para a lista sem ONG, com o motivo gravado', async () => {
+    const id = await criarAceita();
+    const res = await request(app)
+      .post(`/api/doacoes/${id}/devolver`)
+      .send({ ong: 'Casa Esperanca', motivo: 'sem voluntario hoje' });
+
+    expect(res.status).toBe(200);
+    expect(res.body.status).toBe('disponivel');
+    expect(res.body.ong).toBeNull();
+    expect(res.body.motivo_devolucao).toBe('sem voluntario hoje');
+
+    const lista = await request(app).get('/api/doacoes');
+    expect(lista.body).toHaveLength(1);
+  });
+
+  it('recusa devolver uma doacao ja coletada', async () => {
+    const id = await criarAceita();
+    await request(app).post(`/api/doacoes/${id}/coletar`).send({ voluntario: 'Rui' });
+    const res = await request(app)
+      .post(`/api/doacoes/${id}/devolver`)
+      .send({ ong: 'Casa Esperanca', motivo: 'sem voluntario hoje' });
+
+    expect(res.status).toBe(400);
+    expect(res.body.erro).toBe('Doacao ja coletada, nao pode ser devolvida');
+  });
+
+  it('recusa devolver uma doacao aceita por outra ONG', async () => {
+    const id = await criarAceita('Casa Esperanca');
+    const res = await request(app)
+      .post(`/api/doacoes/${id}/devolver`)
+      .send({ ong: 'ONG Solidaria', motivo: 'quero essa' });
+
+    expect(res.status).toBe(400);
+    const aceitas = await request(app).get('/api/doacoes/aceitas');
+    expect(aceitas.body[0].ong).toBe('Casa Esperanca');
+  });
+
+  it('recusa devolver sem informar o motivo', async () => {
+    const id = await criarAceita();
+    const res = await request(app)
+      .post(`/api/doacoes/${id}/devolver`)
+      .send({ ong: 'Casa Esperanca' });
+
+    expect(res.status).toBe(400);
+    expect(res.body.erro).toBe('motivo e obrigatorio');
+  });
+
+  it('permite a mesma ONG aceitar de novo depois de devolver', async () => {
+    const id = await criarAceita();
+    await request(app)
+      .post(`/api/doacoes/${id}/devolver`)
+      .send({ ong: 'Casa Esperanca', motivo: 'sem voluntario hoje' });
+    const res = await request(app)
+      .post(`/api/doacoes/${id}/aceitar`)
+      .send({ ong: 'Casa Esperanca' });
+
+    expect(res.status).toBe(200);
+    expect(res.body.ong).toBe('Casa Esperanca');
+  });
+});
