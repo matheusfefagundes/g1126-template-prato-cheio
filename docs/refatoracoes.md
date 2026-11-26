@@ -25,6 +25,19 @@
 - **O que mudou:** "Extraído comTratamentoDeErro() em src/app.js; os 5 handlers passam a centralizar o catch nessa função, mantendo cada um seu próprio código de sucesso (201 no POST de criação, por exemplo)."
 - **Evidência (testes verdes antes e depois):** "16/16 testes passando antes e depois, nenhuma asserção mudou, só a estrutura interna do arquivo."
 
+## Refatoracao 2 - Extrair resolverOuFalhar de aceitar/coletar/devolver
+
+- Cheiro: aceitar, coletar e devolver em src/doacoes.js repetem o mesmo formato
+  tenta a transicao atomica no banco; se falhar, busca a doacao de novo so para
+  escolher a mensagem de erro certa. E a terceira repeticao (regra de tres).
+- Dor concreta: a proxima transicao nova (ex.: cancelar) copiaria o mesmo bloco
+  pela 4a vez; mudar a forma de buscar o estado atual exigiria editar 3 lugares iguais.
+- O que mudou: extraido resolverOuFalhar(resultado, id, mensagemSeConflito),
+  reutilizado pelas 3 funcoes.
+- Evidencia: npm test - mesmo total de testes passando antes e depois, nenhuma
+  assercao mudou.
+- Revisao: <link do PR, preencher depois>
+
 ---
 
 **Limitações e o que ficou de fora:** `vitest.config.js` roda os arquivos de teste em série (`fileParallelism: false`), porque agora todos compartilham o mesmo banco Postgres real — ao contrário do `:memory:` do SQLite, isolado por processo, um Postgres compartilhado deixa dois arquivos de teste em paralelo colidirem na mesma tabela. Decidimos corretude antes de velocidade por ora; se a suíte crescer muito, vale revisitar (schema por worker, por exemplo) — apontado na revisão do PR #8 por Kauã.
